@@ -1,0 +1,90 @@
+.filters-section {
+    padding: 20px;
+    background-color: #f9f9f9;
+  }
+  
+  .find-job-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .filter-inputs {
+    display: flex;
+    flex-grow: 1;
+  }
+  
+  .filter-input {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    margin-right: 10px;
+  }
+  
+  .filter-input svg {
+    margin-right: 10px;
+    color: #888;
+  }
+  
+  .filter-input input {
+    width: 100%;
+    border: none;
+    outline: none;
+    padding: 10px 0;
+  }
+  
+  .filter-actions {
+    display: flex;
+  }
+  
+  .filters-button,
+  .find-job-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+  
+  .filters-button {
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+  }
+  
+  .filters-button svg {
+    margin-right: 5px;
+  }
+  
+  .find-job-button {
+    background-color: #8A2BE2;
+    color: white;
+  }
+  
+  .popular-searches {
+    margin-top: 15px;
+  }
+  
+  .popular-searches span {
+    font-weight: bold;
+    margin-right: 10px;
+  }
+  
+  .popular-searches a {
+    text-decoration: none;
+    color: #555;
+    margin-right: 15px;
+    font-size: 14px;
+  }
+  

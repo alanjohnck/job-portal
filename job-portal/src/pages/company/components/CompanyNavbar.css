@@ -1,0 +1,149 @@
+.comp-navbar {
+    background: white;
+    border-bottom: 1px solid #f1f2f4;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.comp-nav-top {
+    border-bottom: 1px solid #f1f2f4;
+    padding: 12px 0;
+}
+
+.comp-nav-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-top-left {
+    display: flex;
+    gap: 24px;
+}
+
+.nav-top-left a {
+    font-size: 14px;
+    color: #474c54;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav-top-left a:hover,
+.nav-top-left a.active {
+    color: var(--primary-violet);
+}
+
+.nav-top-left a.active {
+    position: relative;
+}
+
+.nav-top-left a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary-violet);
+}
+
+.nav-top-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #474c54;
+    font-size: 14px;
+}
+
+.nav-divider {
+    width: 1px;
+    height: 14px;
+    background: #e4e5e8;
+}
+
+.comp-nav-main {
+    padding: 16px 0;
+}
+
+.comp-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    font-size: 24px;
+    font-weight: 700;
+    color: #18191c;
+}
+
+.logo-box {
+    width: 36px;
+    height: 36px;
+    background: var(--primary-violet);
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.notif-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #18191c;
+    position: relative;
+    cursor: pointer;
+}
+
+.notif-btn .badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.post-job-btn {
+    background: white;
+    color: var(--primary-violet);
+    border: 2px solid var(--primary-violet);
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.post-job-btn:hover {
+    background: var(--primary-violet);
+    color: white;
+}
+
+.user-avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    /* Square with edges */
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.user-avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

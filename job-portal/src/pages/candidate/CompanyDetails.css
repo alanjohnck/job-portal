@@ -1,0 +1,248 @@
+.company-details-page {
+    background-color: var(--primary-soft);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    padding-bottom: 60px;
+}
+
+.company-banner {
+    background-image: linear-gradient(to right, #4f46e5, #9333ea);
+    height: 200px;
+    width: 100%;
+}
+
+.company-content {
+    max-width: 1200px;
+    margin: -80px auto 0;
+    padding: 0 20px;
+}
+
+.company-header-section {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 30px;
+    border: 1px solid #e5e7eb;
+}
+
+.company-logo-large-box {
+    width: 120px;
+    height: 120px;
+    background: #f3f4f6;
+    border-radius: 16px;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.company-logo-large-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.company-header-info {
+    flex: 1;
+}
+
+.company-title-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.company-title-row h1 {
+    margin: 0;
+    font-size: 28px;
+    color: var(--text-dark);
+}
+
+.open-jobs-pill {
+    background: #eef2ff;
+    color: var(--primary-violet);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.company-meta-row {
+    display: flex;
+    gap: 20px;
+    color: var(--text-gray);
+    font-size: 15px;
+}
+
+.company-meta-row span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.primary-btn {
+    background: var(--primary-violet);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.primary-btn:hover {
+    background: #6d28d9;
+}
+
+/* Grid Layout */
+.company-grid-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+
+.section-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+}
+
+.section-card h3 {
+    margin-top: 0;
+    font-size: 20px;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    padding-bottom: 12px;
+}
+
+.description-text {
+    line-height: 1.6;
+    color: var(--text-gray);
+}
+
+.company-jobs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Sidebar Info */
+.side-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.side-row .label {
+    color: var(--text-gray);
+}
+
+.side-row .value {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.side-row .link {
+    color: var(--primary-violet);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.social-links-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.social-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: #f3f4f6;
+    color: var(--text-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.social-icon:hover {
+    background: var(--primary-violet);
+    color: white;
+}
+
+/* Mini Form */
+.mini-contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mini-contact-form input,
+.mini-contact-form textarea {
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: inherit;
+}
+
+.mini-contact-form textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.mini-contact-form button {
+    background: var(--primary-violet);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+@media (max-width: 900px) {
+    .company-grid-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .company-header-section {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: center;
+    }
+
+    .company-header-info {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .company-meta-row {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .company-logo-large-box {
+        margin: 0 auto;
+    }
+}

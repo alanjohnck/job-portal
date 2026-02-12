@@ -1,0 +1,30 @@
+.company-logo-admin {
+    width: 36px;
+    height: 36px;
+    background: #f1f5f9;
+    color: var(--primary-violet);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+.industry-text {
+    font-size: 14px;
+    color: #475569;
+    font-weight: 500;
+}
+
+.rev-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #10b981;
+}
+
+.company-info-cell {
+    display: flex;
+    flex-direction: column;
+}

@@ -1,0 +1,181 @@
+.saved-candidates-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.saved-candidates-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #18191c;
+}
+
+.deadline-hint {
+    font-size: 13px;
+    color: #767f8c;
+}
+
+.candidates-list-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.candidate-row-card {
+    background: white;
+    border: 1px solid #f1f2f4;
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.candidate-row-card:hover {
+    border-color: var(--primary-violet);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.candidate-row-card.highlighted {
+    background: #f5f3ff;
+    border-color: var(--primary-border);
+}
+
+.candidate-basic-info {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.candidate-avatar-square {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.candidate-avatar-square img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.candidate-name-box h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #18191c;
+    margin: 0 0 4px 0;
+}
+
+.candidate-name-box p {
+    font-size: 13px;
+    color: #767f8c;
+    margin: 0;
+}
+
+.candidate-actions-flex {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.bookmark-btn {
+    background: none;
+    border: none;
+    color: #adb5bd;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.bookmark-btn.active {
+    color: var(--primary-violet);
+}
+
+.view-profile-btn-premium {
+    background: #f1f2f4;
+    color: var(--primary-violet);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+.candidate-row-card.highlighted .view-profile-btn-premium {
+    background: var(--primary-violet);
+    color: white;
+}
+
+.view-profile-btn-premium:hover {
+    background: var(--primary-violet);
+    color: white;
+}
+
+.more-action-wrap {
+    position: relative;
+}
+
+.dots-btn {
+    background: none;
+    border: none;
+    color: #adb5bd;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 8px;
+}
+
+.action-dropdown-small {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f1f2f4;
+    z-index: 100;
+    min-width: 180px;
+    padding: 8px;
+    animation: fadeInScale 0.2s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.action-dropdown-small button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: none;
+    color: #474c54;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.action-dropdown-small button:hover {
+    background: #f8f9fa;
+    color: var(--primary-violet);
+}

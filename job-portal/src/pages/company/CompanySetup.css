@@ -1,0 +1,349 @@
+.company-setup-page {
+    background-color: #fcfcfc;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    color: #18191c;
+}
+
+.setup-header {
+    background: white;
+    padding: 20px 0;
+    border-bottom: 1px solid #f1f2f4;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #18191c;
+}
+
+.logo-icon-box {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-violet);
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.setup-progress-box {
+    width: 280px;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #767f8c;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.progress-bar-bg {
+    height: 6px;
+    background: #e4e5e8;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--primary-violet);
+    transition: width 0.5s ease;
+}
+
+/* Stepper */
+.setup-stepper {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 40px 0;
+    border-bottom: 1px solid #f1f2f4;
+    margin-bottom: 40px;
+}
+
+.stepper-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 4px;
+    color: #9199a3;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.stepper-item.active {
+    color: var(--primary-violet);
+}
+
+.stepper-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary-violet);
+}
+
+.step-icon {
+    width: 48px;
+    height: 48px;
+    background: #f8f9fa;
+    color: #9199a3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    border-radius: 12px;
+    /* Giving it edges/rounded square instead of circle */
+    transition: all 0.3s;
+}
+
+.stepper-item.active .step-icon {
+    background: white;
+    color: var(--primary-violet);
+    box-shadow: 0 10px 20px rgba(124, 58, 237, 0.1);
+}
+
+.stepper-item.completed .step-icon {
+    background: var(--primary-soft);
+    color: var(--primary-violet);
+}
+
+.active-glow {
+    position: absolute;
+    inset: 0;
+    background: var(--primary-soft);
+    opacity: 0.1;
+    border-radius: 12px;
+    z-index: -1;
+}
+
+/* Setup Card */
+.setup-card {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 1000px;
+    margin: 0 auto 60px;
+}
+
+.setup-section {
+    padding: 20px 0;
+}
+
+.section-main-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+/* Upload Area */
+.upload-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.upload-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #18191c;
+}
+
+.upload-area {
+    border: 2px dashed #e4e5e8;
+    border-radius: 12px;
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #fcfcfc;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-violet);
+    background: var(--primary-soft);
+}
+
+.upload-icon-large {
+    font-size: 40px;
+    color: #9199a3;
+    margin-bottom: 16px;
+}
+
+.upload-text {
+    font-size: 14px;
+    color: #474c54;
+    margin-bottom: 8px;
+}
+
+.upload-text strong {
+    color: var(--primary-violet);
+}
+
+.upload-hint {
+    font-size: 12px;
+    color: #767f8c;
+    line-height: 1.5;
+}
+
+.preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* Form Groups */
+.form-group-large {
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.premium-input {
+    padding: 14px 18px;
+    border: 1px solid #e4e5e8;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s;
+}
+
+.premium-input:focus {
+    outline: none;
+    border-color: var(--primary-violet);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.05);
+}
+
+.rich-textarea-container {
+    border: 1px solid #e4e5e8;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.premium-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 18px;
+    border: none;
+    font-size: 15px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.premium-textarea:focus {
+    outline: none;
+}
+
+.textarea-toolbar {
+    padding: 10px 18px;
+    background: #f8f9fa;
+    border-top: 1px solid #f1f2f4;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.tool-btn {
+    background: none;
+    border: none;
+    color: #767f8c;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.tool-btn:hover {
+    background: #e4e5e8;
+    color: #18191c;
+}
+
+.tool-divider {
+    width: 1px;
+    height: 20px;
+    background: #cbd5e0;
+}
+
+/* Footer */
+.setup-footer {
+    padding-top: 40px;
+    border-top: 1px solid #f1f2f4;
+}
+
+.save-next-btn {
+    background: var(--primary-violet);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.save-next-btn:hover {
+    background: #6d28d9;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(124, 58, 237, 0.2);
+}
+
+/* Container Utility */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+    .upload-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .setup-stepper {
+        gap: 15px;
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+
+    .stepper-item span:not(.step-icon) {
+        display: none;
+    }
+}

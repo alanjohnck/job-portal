@@ -1,0 +1,160 @@
+.job-card-v2 {
+  background: var(--white);
+  border: 1px solid #f3f4f6;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  height: 100%;
+}
+
+.job-card-v2:hover {
+  border-color: var(--primary-border);
+  box-shadow: 0 12px 24px -8px rgba(124, 58, 237, 0.15);
+  transform: translateY(-4px);
+}
+
+.job-card-v2.list {
+  flex-direction: row;
+  align-items: center;
+  padding: 16px 24px;
+  height: auto;
+}
+
+/* Card Elements */
+.card-main-info {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.company-logo-square {
+  width: 48px;
+  height: 48px;
+  background: var(--primary-soft);
+  color: var(--primary-violet);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  border-radius: 12px;
+  font-size: 20px;
+  overflow: hidden;
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+  /* Optional: add padding if logo hits edges */
+  background: white;
+}
+
+.title-section h3 {
+  font-size: 17px;
+  color: var(--text-dark);
+  margin: 0 0 4px 0;
+  font-weight: 700;
+}
+
+.job-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-gray);
+}
+
+.dot {
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+.card-right-info {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.job-card-v2.list .card-right-info {
+  margin-top: 0;
+  flex: 1;
+  justify-content: flex-end;
+  gap: 40px;
+}
+
+.badge-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.job-card-v2.list .badge-group {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.type-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.type-badge.fulltime {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.type-badge.parttime {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.type-badge.internship {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.salary-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.apply-btn-outline {
+  background: transparent;
+  border: 1px solid var(--primary-border);
+  color: var(--primary-violet);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.apply-btn-outline:hover {
+  background: var(--primary-violet);
+  color: white;
+  border-color: var(--primary-violet);
+}
+
+@media (max-width: 768px) {
+  .job-card-v2.list {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .job-card-v2.list .card-right-info {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 16px;
+  }
+}

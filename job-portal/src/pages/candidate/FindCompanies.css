@@ -1,0 +1,26 @@
+.find-companies-page {
+    background-color: var(--primary-soft);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+.companies-content {
+    padding: 80px 20px 60px;
+    margin-top: 20px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.companies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 32px;
+    margin-bottom: 48px;
+}
+
+@media (max-width: 768px) {
+    .companies-grid {
+        grid-template-columns: 1fr;
+    }
+}

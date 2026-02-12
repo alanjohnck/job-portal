@@ -1,0 +1,118 @@
+.support-stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.s-stat {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.s-stat h4 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.s-stat span {
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.s-stat.open h4 {
+    color: #ef4444;
+}
+
+.s-stat.progress h4 {
+    color: #3b82f6;
+}
+
+.s-stat.closed h4 {
+    color: #10b981;
+}
+
+.ticket-id {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700;
+    color: #475569;
+}
+
+.support-from-cell {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.support-from-cell svg {
+    margin-top: 4px;
+    color: #94a3b8;
+}
+
+.from-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.from-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.from-type {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.subject-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+}
+
+.priority-tag {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.priority-tag.high {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.priority-tag.medium {
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
+.priority-tag.low {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.status-pill-admin.in-progress {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.status-pill-admin.open {
+    background: #fff1f2;
+    color: #ef4444;
+}
+
+.status-pill-admin.closed {
+    background: #dcfce7;
+    color: #10b981;
+}

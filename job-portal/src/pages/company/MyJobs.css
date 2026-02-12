@@ -1,0 +1,272 @@
+.my-jobs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.my-jobs-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #18191c;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.count-badge {
+    color: #9199a3;
+    font-weight: 500;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-right label {
+    font-size: 14px;
+    color: #474c54;
+}
+
+.status-select {
+    padding: 10px 16px;
+    border: 1px solid #e4e5e8;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #18191c;
+    background: white;
+    min-width: 150px;
+    cursor: pointer;
+}
+
+/* Table Card */
+.premium-table-card {
+    background: white;
+    border: 1px solid #f1f2f4;
+    border-radius: 12px;
+    overflow: visible;
+}
+
+.jobs-data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.jobs-data-table th {
+    text-align: left;
+    padding: 16px 24px;
+    background: #f8f9fa;
+    font-size: 12px;
+    color: #767f8c;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.jobs-data-table td {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f2f4;
+    vertical-align: middle;
+}
+
+.job-cell-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.job-title-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #18191c;
+}
+
+.job-sub-text {
+    font-size: 13px;
+    color: #9199a3;
+}
+
+.status-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-tag.active {
+    color: #22c55e;
+}
+
+.status-tag.expire {
+    color: #ef4444;
+}
+
+.apps-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #474c54;
+    font-size: 14px;
+}
+
+.apps-info .icon {
+    color: #767f8c;
+}
+
+.actions-cell-flex {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.view-apps-btn-premium {
+    background: var(--primary-soft);
+    color: var(--primary-violet);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.view-apps-btn-premium:hover {
+    background: var(--primary-violet);
+    color: white;
+}
+
+.highlighted-row {
+    background: #f5f3ff;
+}
+
+.highlighted-row td {
+    border-top: 1px solid var(--primary-border);
+    border-bottom: 1px solid var(--primary-border);
+}
+
+.highlighted-row .view-apps-btn-premium {
+    background: var(--primary-violet);
+    color: white;
+}
+
+/* Actions Menu */
+.more-menu-container {
+    position: relative;
+}
+
+.dots-btn {
+    background: none;
+    border: none;
+    color: #adb5bd;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 8px;
+}
+
+.dropdown-menu-premium {
+    position: absolute;
+    right: 0;
+    top: 40px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f1f2f4;
+    z-index: 1000;
+    min-width: 180px;
+    padding: 8px;
+    animation: fadeInScale 0.2s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.dropdown-menu-premium button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: none;
+    color: #474c54;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.dropdown-menu-premium button:hover {
+    background: #f8f9fa;
+    color: var(--primary-violet);
+}
+
+/* Pagination */
+.pagination-comp {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 48px 0;
+}
+
+.page-number,
+.page-arrow {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #e4e5e8;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #474c54;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.page-number.active {
+    background: var(--primary-violet);
+    color: white;
+    border-color: var(--primary-violet);
+}
+
+.page-number:hover:not(.active) {
+    border-color: var(--primary-violet);
+    color: var(--primary-violet);
+}
+
+.page-arrow {
+    background: var(--primary-soft);
+    color: var(--primary-violet);
+    border: none;
+}
+
+.page-arrow:hover {
+    background: var(--primary-violet);
+    color: white;
+}
+
+.comp-footer-minimal {
+    margin-top: auto;
+    padding: 24px 0;
+    text-align: center;
+    color: #767f8c;
+    font-size: 14px;
+    border-top: 1px solid #f1f2f4;
+}
