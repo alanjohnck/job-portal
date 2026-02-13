@@ -23,4 +23,5 @@ public class MockTest
     public Job Job { get; set; } = null!;
     public Company Company { get; set; } = null!;
     public ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
+    public ICollection<TestQuestion> Questions { get; set; } = new List<TestQuestion>();
 }

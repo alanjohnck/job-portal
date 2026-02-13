@@ -4,7 +4,7 @@ import './Dashboard.css';
 import { FaBriefcase, FaUser, FaCog, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaBookmark, FaBell, FaClipboardCheck, FaArrowRight, FaSignOutAlt } from 'react-icons/fa';
 import JobCard from './components/JobCard';
 import { useNavigate } from 'react-router-dom';
-import { getMyApplications, getSavedJobs } from '../../services/api';
+import { getMyApplications, getSavedJobs, getNotifications, markAllNotificationsRead } from '../../services/api';
 
 const MockTest = ({ testName, onComplete }) => {
     const [step, setStep] = useState(0);
@@ -57,16 +57,10 @@ const Dashboard = () => {
     const [showTest, setShowTest] = useState(null);
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [savedJobs, setSavedJobs] = useState([]);
+    const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const navigate = useNavigate();
-
-    // Mock Notifications
-    const notifications = [
-        { id: 1, title: 'Interview Scheduled', msg: 'Google Inc. invited you for a technical round.', type: 'invite', date: 'Just now' },
-        { id: 2, title: 'Mock Test Available', msg: 'Please complete the assessment for Frontend Dev role.', type: 'test', date: '2h ago', testName: 'React & JS Basics' },
-        { id: 3, title: 'Application Viewed', msg: 'Apple Inc. reviewed your application.', type: 'update', date: '1d ago' }
-    ];
 
     useEffect(() => {
         fetchDashboardData();
@@ -77,9 +71,10 @@ const Dashboard = () => {
             setLoading(true);
             setError('');
 
-            const [applicationsRes, savedRes] = await Promise.all([
+            const [applicationsRes, savedRes, notificationsRes] = await Promise.all([
                 getMyApplications(null, 1, 10),
-                getSavedJobs()
+                getSavedJobs(),
+                getNotifications()
             ]);
 
             if (applicationsRes.success && applicationsRes.data?.items) {
@@ -88,6 +83,10 @@ const Dashboard = () => {
 
             if (savedRes.success) {
                 setSavedJobs(savedRes.data || []);
+            }
+
+            if (notificationsRes.success) {
+                setNotifications(notificationsRes.data || []);
             }
         } catch (err) {
             console.error('Error fetching dashboard data:', err);
@@ -111,6 +110,29 @@ const Dashboard = () => {
         jobType: 'Full-time',
         location: 'Remote'
     });
+
+    const formatNotificationDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleString();
+    };
+
+    const getNotificationClass = (type) => {
+        const normalized = (type || '').toLowerCase();
+        if (normalized.includes('test')) return 'test';
+        if (normalized.includes('invite')) return 'invite';
+        return 'update';
+    };
+
+    const handleMarkAllRead = async () => {
+        try {
+            await markAllNotificationsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        } catch (err) {
+            console.error('Error marking notifications as read:', err);
+        }
+    };
 
     const interviewCount = appliedJobs.filter(a => a.status === 'Interviewing').length;
 
@@ -203,20 +225,25 @@ const Dashboard = () => {
                     <div className="dashboard-section">
                         <div className="section-header">
                             <h3>Notifications</h3>
-                            <button className="text-btn">Mark all as read</button>
+                            <button className="text-btn" onClick={handleMarkAllRead} disabled={notifications.length === 0}>
+                                Mark all as read
+                            </button>
                         </div>
                         <div className="notifications-list">
+                            {notifications.length === 0 && (
+                                <div className="empty-state">No notifications yet.</div>
+                            )}
                             {notifications.map(notif => (
                                 <div key={notif.id} className="notif-card">
-                                    <div className={`notif-icon ${notif.type}`}><FaBell /></div>
+                                    <div className={`notif-icon ${getNotificationClass(notif.type)}`}><FaBell /></div>
                                     <div className="notif-content">
                                         <div className="notif-header">
                                             <strong>{notif.title}</strong>
-                                            <span className="notif-date">{notif.date}</span>
+                                            <span className="notif-date">{formatNotificationDate(notif.createdAt)}</span>
                                         </div>
-                                        <p>{notif.msg}</p>
-                                        {notif.type === 'test' && (
-                                            <button className="notif-action-btn" onClick={() => setShowTest(notif.testName)}>
+                                        <p>{notif.message}</p>
+                                        {(notif.type || '').toLowerCase().includes('test') && notif.relatedEntityId && (
+                                            <button className="notif-action-btn" onClick={() => setShowTest('Mock Test')}>
                                                 Attempt Test <FaArrowRight />
                                             </button>
                                         )}

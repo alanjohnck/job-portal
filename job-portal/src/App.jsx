@@ -13,6 +13,7 @@ import CompanyDashboard from './pages/company/CompanyDashboard'
 import PostJob from './pages/company/PostJob'
 import MyJobs from './pages/company/MyJobs'
 import Applications from './pages/company/Applications'
+import CandidateProfileView from './pages/company/CandidateProfileView'
 import SavedCandidates from './pages/company/SavedCandidates'
 import FindCandidate from './pages/company/FindCandidate'
 import MockTests from './pages/company/MockTests'
@@ -42,6 +43,7 @@ function App() {
         <Route path="/company/post-job" element={<PostJob />} />
         <Route path="/company/my-jobs" element={<MyJobs />} />
         <Route path="/company/applications/:jobId" element={<Applications />} />
+        <Route path="/company/candidate/:candidateId" element={<CandidateProfileView />} />
         <Route path="/company/saved-candidates" element={<SavedCandidates />} />
         <Route path="/company/find-candidate" element={<FindCandidate />} />
         <Route path="/company/mock-tests" element={<MockTests />} />

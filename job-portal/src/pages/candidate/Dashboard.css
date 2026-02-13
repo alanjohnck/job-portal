@@ -347,6 +347,15 @@
     gap: 15px;
 }
 
+.notifications-list .empty-state {
+    background: white;
+    border: 1px solid #eef2f6;
+    border-radius: 12px;
+    padding: 20px;
+    color: #6b7280;
+    text-align: center;
+}
+
 .notif-card {
     display: flex;
     gap: 15px;

@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL + '/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5113';
+const API_URL = `${API_BASE_URL}/api/v1`;
 
 const getHeaders = () => {
     const token = localStorage.getItem('token');
@@ -110,6 +111,47 @@ export const getCompanyProfile = async () => {
     return response.json();
 };
 
+export const searchCandidates = async (keyword, location, experienceYears, skills, page = 1, pageSize = 20) => {
+    const params = new URLSearchParams({ page, pageSize });
+    if (keyword) params.append('keyword', keyword);
+    if (location) params.append('location', location);
+    if (experienceYears != null && experienceYears !== '') params.append('experienceYears', experienceYears);
+    if (skills) params.append('skills', skills);
+
+    const response = await fetch(`${API_URL}/companies/candidates/search?${params}`, {
+        headers: getHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to search candidates');
+    return response.json();
+};
+
+export const saveCandidate = async (candidateId, notes = null) => {
+    const response = await fetch(`${API_URL}/companies/candidates/${candidateId}/save`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(notes)
+    });
+    if (!response.ok) throw new Error('Failed to save candidate');
+    return response.json();
+};
+
+export const getSavedCandidates = async () => {
+    const response = await fetch(`${API_URL}/companies/candidates/saved`, {
+        headers: getHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch saved candidates');
+    return response.json();
+};
+
+export const removeSavedCandidate = async (candidateId) => {
+    const response = await fetch(`${API_URL}/companies/candidates/${candidateId}/save`, {
+        method: 'DELETE',
+        headers: getHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to remove saved candidate');
+    return response.json();
+};
+
 export const updateCompanyProfile = async (profileData) => {
     const response = await fetch(`${API_URL}/companies/profile`, {
         method: 'PUT',
@@ -177,6 +219,36 @@ export const getSavedJobs = async () => {
         headers: getHeaders()
     });
     if (!response.ok) throw new Error('Failed to fetch saved jobs');
+    return response.json();
+};
+
+// Notifications APIs
+export const getNotifications = async (unreadOnly = false) => {
+    const params = new URLSearchParams();
+    if (unreadOnly) params.append('unreadOnly', 'true');
+    const query = params.toString();
+    const response = await fetch(`${API_URL}/notifications${query ? `?${query}` : ''}`, {
+        headers: getHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch notifications');
+    return response.json();
+};
+
+export const markNotificationRead = async (notificationId) => {
+    const response = await fetch(`${API_URL}/notifications/${notificationId}/read`, {
+        method: 'PATCH',
+        headers: getHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to mark notification as read');
+    return response.json();
+};
+
+export const markAllNotificationsRead = async () => {
+    const response = await fetch(`${API_URL}/notifications/mark-all-read`, {
+        method: 'PATCH',
+        headers: getHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to mark all notifications as read');
     return response.json();
 };
 

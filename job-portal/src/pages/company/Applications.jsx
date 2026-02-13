@@ -16,6 +16,9 @@ const Applications = () => {
     const [showSort, setShowSort] = useState(false);
     const [activeColMenu, setActiveColMenu] = useState(null);
     const [jobTitle, setJobTitle] = useState('Job');
+    const [updatingAppId, setUpdatingAppId] = useState(null);
+
+    const statusOptions = ['Applied', 'Shortlisted', 'Interviewed', 'Offered', 'Rejected', 'Hired'];
 
     useEffect(() => {
         if (!jobId) {
@@ -43,16 +46,19 @@ const Applications = () => {
             
             if (response.success && response.data) {
                 const applications = response.data.items || [];
-                
-                // Group applications by their kanban column
-                const columnMap = {};
+
+                const columnMap = new Map();
+                statusOptions.forEach(status => columnMap.set(status, []));
+
                 applications.forEach(app => {
-                    const col = app.kanbanColumn || 'All Application';
-                    if (!columnMap[col]) {
-                        columnMap[col] = [];
+                    const status = app.status || 'Applied';
+                    if (!columnMap.has(status)) {
+                        columnMap.set(status, []);
                     }
-                    columnMap[col].push({
+
+                    columnMap.get(status).push({
                         id: app.id,
+                        candidateId: app.candidate?.id,
                         name: `${app.candidate.firstName} ${app.candidate.lastName}`,
                         initials: `${app.candidate.firstName?.[0] || ''}${app.candidate.lastName?.[0] || ''}`,
                         role: app.candidate.currentJobTitle || 'Candidate',
@@ -62,25 +68,17 @@ const Applications = () => {
                         image: app.candidate.profilePicture,
                         resumeUrl: app.resumeUrl,
                         coverLetter: app.coverLetter,
-                        status: app.status,
+                        status: status,
                         email: app.candidate.email,
                         skills: app.candidate.skills || []
                     });
                 });
 
-                // Convert to columns array
-                const columnsArray = Object.entries(columnMap).map(([title, apps]) => ({
+                const columnsArray = Array.from(columnMap.entries()).map(([title, apps]) => ({
                     title,
                     count: apps.length,
                     applications: apps
                 }));
-
-                // Ensure "All Application" is first if it exists
-                columnsArray.sort((a, b) => {
-                    if (a.title === 'All Application') return -1;
-                    if (b.title === 'All Application') return 1;
-                    return 0;
-                });
 
                 setColumns(columnsArray);
             }
@@ -98,6 +96,20 @@ const Applications = () => {
             window.open(resumeUrl, '_blank');
         } else {
             alert(`Resume not available for ${candidateName}`);
+        }
+    };
+
+    const handleStatusChange = async (applicationId, status) => {
+        if (!applicationId || !status) return;
+        try {
+            setUpdatingAppId(applicationId);
+            await updateApplicationStatus(applicationId, status, status);
+            await fetchApplications(jobId);
+        } catch (err) {
+            console.error('Error updating application status:', err);
+            alert('Failed to update status. Please try again.');
+        } finally {
+            setUpdatingAppId(null);
         }
     };
 
@@ -206,23 +218,43 @@ const Applications = () => {
                                                         )}
                                                     </div>
                                                     <div className="card-footer">
-                                                        <button 
-                                                            className="download-cv-btn"
-                                                            onClick={() => handleDownloadResume(app.resumeUrl, app.name)}
-                                                            disabled={!app.resumeUrl}
-                                                            title={app.resumeUrl ? 'Download Resume' : 'Resume not available'}
-                                                        >
-                                                            <FaDownload /> {app.resumeUrl ? 'Download CV' : 'No Resume'}
-                                                        </button>
+                                                        <div className="card-footer-actions">
+                                                            <button
+                                                                className="view-profile-btn"
+                                                                onClick={() => app.candidateId && navigate(`/company/candidate/${app.candidateId}`)}
+                                                                disabled={!app.candidateId}
+                                                                title={app.candidateId ? 'View full profile' : 'Profile unavailable'}
+                                                            >
+                                                                View Profile
+                                                            </button>
+                                                            <div className="status-control">
+                                                                <span>Move to</span>
+                                                                <select
+                                                                    className="status-select"
+                                                                    value={app.status || 'Applied'}
+                                                                    onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                                                                    disabled={updatingAppId === app.id}
+                                                                >
+                                                                    {statusOptions.map((status) => (
+                                                                        <option key={status} value={status}>{status}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                            <button
+                                                                className="download-cv-btn"
+                                                                onClick={() => handleDownloadResume(app.resumeUrl, app.name)}
+                                                                disabled={!app.resumeUrl}
+                                                                title={app.resumeUrl ? 'Download Resume' : 'Resume not available'}
+                                                            >
+                                                                <FaDownload /> {app.resumeUrl ? 'Download CV' : 'No Resume'}
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 ))}
-                                <button className="create-column-btn">
-                                    <FaPlus /> Create Column
-                                </button>
                             </div>
                         )}
 

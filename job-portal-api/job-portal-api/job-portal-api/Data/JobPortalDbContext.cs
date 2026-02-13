@@ -26,6 +26,9 @@ public class JobPortalDbContext : DbContext
     public DbSet<Education> Educations { get; set; }
     public DbSet<Certification> Certifications { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<TestQuestion> TestQuestions { get; set; }
+    public DbSet<TestQuestionOption> TestQuestionOptions { get; set; }
+    public DbSet<TestAnswer> TestAnswers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -417,6 +417,7 @@ public class CompanyService : ICompanyService
 
         var application = await _context.JobApplications
             .Include(a => a.Job)
+            .Include(a => a.Candidate)
             .FirstOrDefaultAsync(a => a.Id == applicationId);
 
         if (application == null)
@@ -425,6 +426,7 @@ public class CompanyService : ICompanyService
         if (application.Job.CompanyId != company.Id)
             return ApiResponse<object>.ErrorResponse("Access denied", "FORBIDDEN");
 
+        var previousStatus = application.Status;
         application.Status = request.Status;
         if (!string.IsNullOrEmpty(request.KanbanColumn))
         {
@@ -434,6 +436,19 @@ public class CompanyService : ICompanyService
 
         _context.JobApplications.Update(application);
         await _context.SaveChangesAsync();
+
+        if (!string.Equals(previousStatus, application.Status, StringComparison.OrdinalIgnoreCase))
+        {
+            var title = "Application status updated";
+            var message = $"Your application for {application.Job.Title} is now {application.Status}.";
+            await _notificationService.CreateNotificationAsync(
+                application.Candidate.UserId,
+                title,
+                message,
+                "ApplicationStatus",
+                application.Id.ToString(),
+                "Application");
+        }
 
         return ApiResponse<object>.SuccessResponse(null, "Application status updated successfully");
     }
@@ -574,7 +589,8 @@ public class CompanyService : ICompanyService
                 ProfilePicture = s.Candidate.ProfilePicture,
                 CurrentJobTitle = s.Candidate.CurrentJobTitle,
                 ExperienceYears = s.Candidate.ExperienceYears,
-                Skills = s.Candidate.Skills
+                Skills = s.Candidate.Skills,
+                ResumeUrl = s.Candidate.ResumeUrl
             }
         }).ToList();
 

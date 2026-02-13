@@ -35,7 +35,7 @@ public class TestResultDto
     public int Score { get; set; }
     public int Rank { get; set; }
     public bool HasPassed { get; set; }
-    public DateTime CompletedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
 }
 
 public class SubmitTestRequest
