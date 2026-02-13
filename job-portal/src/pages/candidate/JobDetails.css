@@ -96,6 +96,17 @@
     font-size: 20px;
 }
 
+.save-btn.active {
+    background: #f3f0ff;
+    color: var(--primary-violet);
+    border-color: #e0d7ff;
+}
+
+.save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .apply-btn-primary {
     background: var(--primary-violet);
     color: white;

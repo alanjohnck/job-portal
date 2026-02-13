@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import './Dashboard.css';
 import { FaBriefcase, FaUser, FaCog, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaBookmark, FaBell, FaClipboardCheck, FaArrowRight, FaSignOutAlt } from 'react-icons/fa';
 import JobCard from './components/JobCard';
-import { jobs } from './data/jobs';
 import { useNavigate } from 'react-router-dom';
+import { getMyApplications, getSavedJobs } from '../../services/api';
 
 const MockTest = ({ testName, onComplete }) => {
     const [step, setStep] = useState(0);
@@ -55,6 +55,10 @@ const MockTest = ({ testName, onComplete }) => {
 const Dashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [showTest, setShowTest] = useState(null);
+    const [appliedJobs, setAppliedJobs] = useState([]);
+    const [savedJobs, setSavedJobs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
     // Mock Notifications
@@ -64,17 +68,62 @@ const Dashboard = () => {
         { id: 3, title: 'Application Viewed', msg: 'Apple Inc. reviewed your application.', type: 'update', date: '1d ago' }
     ];
 
-    // Simulate applied jobs
-    const appliedJobs = jobs.slice(0, 3).map(job => ({
-        ...job,
-        status: ['Applied', 'Interviewing', 'Rejected'][Math.floor(Math.random() * 3)],
-        appliedDate: '12 Aug, 2024'
-    }));
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
 
-    const savedJobs = jobs.slice(3, 6);
+    const fetchDashboardData = async () => {
+        try {
+            setLoading(true);
+            setError('');
+
+            const [applicationsRes, savedRes] = await Promise.all([
+                getMyApplications(null, 1, 10),
+                getSavedJobs()
+            ]);
+
+            if (applicationsRes.success && applicationsRes.data?.items) {
+                setAppliedJobs(applicationsRes.data.items);
+            }
+
+            if (savedRes.success) {
+                setSavedJobs(savedRes.data || []);
+            }
+        } catch (err) {
+            console.error('Error fetching dashboard data:', err);
+            setError('Failed to load dashboard data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString();
+    };
+
+    const mapApplicationToJobCard = (application) => ({
+        id: application.job?.id,
+        title: application.job?.title || 'Job Title',
+        company: application.job?.company?.name || 'Company',
+        logo: application.job?.company?.logo,
+        jobType: 'Full-time',
+        location: 'Remote'
+    });
+
+    const interviewCount = appliedJobs.filter(a => a.status === 'Interviewing').length;
 
     const renderContent = () => {
         if (showTest) return <MockTest testName={showTest} onComplete={() => { setShowTest(null); setActiveTab('overview'); }} />;
+
+        if (loading) {
+            return <div className="loading-message">Loading dashboard...</div>;
+        }
+
+        if (error) {
+            return <div className="error-message">{error}</div>;
+        }
 
         switch (activeTab) {
             case 'overview':
@@ -92,7 +141,7 @@ const Dashboard = () => {
                                 <div className="stat-icon"><FaBookmark /></div>
                             </div>
                             <div className="stat-card green">
-                                <div className="stat-value">2</div>
+                                <div className="stat-value">{interviewCount}</div>
                                 <div className="stat-label">Interviews</div>
                                 <div className="stat-icon"><FaCheckCircle /></div>
                             </div>
@@ -102,20 +151,24 @@ const Dashboard = () => {
                             <h3>Recent Applications</h3>
                         </div>
                         <div className="applications-list">
-                            {appliedJobs.map(job => (
-                                <div key={job.id} className="application-row">
+                            {appliedJobs.slice(0, 5).map(app => (
+                                <div key={app.id} className="application-row">
                                     <div className="app-job-info">
                                         <div className="app-logo">
-                                            {job.logo ? <img src={job.logo} alt="" /> : (job.company ? job.company[0] : 'C')}
+                                            {app.job?.company?.logo ? (
+                                                <img src={app.job.company.logo} alt="" />
+                                            ) : (
+                                                app.job?.company?.name ? app.job.company.name[0] : 'C'
+                                            )}
                                         </div>
                                         <div>
-                                            <div className="app-title">{job.title}</div>
-                                            <div className="app-company">{job.company}</div>
+                                            <div className="app-title">{app.job?.title}</div>
+                                            <div className="app-company">{app.job?.company?.name}</div>
                                         </div>
                                     </div>
-                                    <div className="app-date">Applied: {job.appliedDate}</div>
-                                    <div className={`app-status ${job.status.toLowerCase()}`}>
-                                        {job.status}
+                                    <div className="app-date">Applied: {formatDate(app.appliedAt)}</div>
+                                    <div className={`app-status ${(app.status || 'Applied').toLowerCase()}`}>
+                                        {app.status || 'Applied'}
                                     </div>
                                     <button className="view-btn-sm">View Details</button>
                                 </div>
@@ -128,8 +181,8 @@ const Dashboard = () => {
                     <div className="dashboard-section">
                         <h3>My Applications</h3>
                         <div className="applications-grid">
-                            {appliedJobs.map(job => (
-                                <JobCard key={job.id} job={job} view="list" />
+                            {appliedJobs.map(app => (
+                                <JobCard key={app.id} job={mapApplicationToJobCard(app)} view="list" />
                             ))}
                         </div>
                     </div>

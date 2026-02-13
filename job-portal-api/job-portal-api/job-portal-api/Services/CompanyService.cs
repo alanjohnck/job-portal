@@ -9,10 +9,12 @@ namespace JobPortalApi.Services;
 public class CompanyService : ICompanyService
 {
     private readonly JobPortalDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public CompanyService(JobPortalDbContext context)
+    public CompanyService(JobPortalDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     private async Task<Company?> GetCompanyByUserIdAsync(Guid userId)
@@ -81,6 +83,8 @@ public class CompanyService : ICompanyService
         company.Industry = request.Industry ?? company.Industry;
         company.CompanySize = request.CompanySize ?? company.CompanySize;
         company.Description = request.Description ?? company.Description;
+        company.Logo = request.Logo ?? company.Logo;
+        company.BannerImage = request.BannerImage ?? company.BannerImage;
         company.HeadquarterAddress = request.HeadquarterAddress ?? company.HeadquarterAddress;
         company.City = request.City ?? company.City;
         company.State = request.State ?? company.State;

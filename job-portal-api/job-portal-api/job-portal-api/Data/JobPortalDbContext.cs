@@ -22,6 +22,10 @@ public class JobPortalDbContext : DbContext
     public DbSet<SupportTicket> SupportTickets { get; set; }
     public DbSet<AdminLog> AdminLogs { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<WorkExperience> WorkExperiences { get; set; }
+    public DbSet<Education> Educations { get; set; }
+    public DbSet<Certification> Certifications { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -67,6 +71,69 @@ public class JobPortalDbContext : DbContext
                 .HasConversion(
                     v => string.Join(',', v),
                     v => v.Split(',', StringSplitOptions.RemoveEmptyEntries));
+        });
+
+        // WorkExperience Configuration
+        modelBuilder.Entity<WorkExperience>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.CandidateId);
+            
+            entity.HasOne(e => e.Candidate)
+                .WithMany(c => c.WorkExperiences)
+                .HasForeignKey(e => e.CandidateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.JobTitle).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.CompanyName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Location).HasMaxLength(200);
+            entity.Property(e => e.EmploymentType).HasMaxLength(50);
+            entity.Property(e => e.Description).HasMaxLength(5000);
+            
+            entity.Property(e => e.Achievements)
+                .HasConversion(
+                    v => string.Join("|||", v),
+                    v => v.Split("|||", StringSplitOptions.RemoveEmptyEntries));
+            
+            entity.Property(e => e.TechnologiesUsed)
+                .HasConversion(
+                    v => string.Join(',', v),
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries));
+        });
+
+        // Education Configuration
+        modelBuilder.Entity<Education>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.CandidateId);
+            
+            entity.HasOne(e => e.Candidate)
+                .WithMany(c => c.Educations)
+                .HasForeignKey(e => e.CandidateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.InstitutionName).IsRequired().HasMaxLength(300);
+            entity.Property(e => e.Degree).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.FieldOfStudy).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Grade).HasMaxLength(50);
+            entity.Property(e => e.Description).HasMaxLength(2000);
+        });
+
+        // Certification Configuration
+        modelBuilder.Entity<Certification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.CandidateId);
+            
+            entity.HasOne(e => e.Candidate)
+                .WithMany(c => c.Certifications)
+                .HasForeignKey(e => e.CandidateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(300);
+            entity.Property(e => e.IssuingOrganization).IsRequired().HasMaxLength(300);
+            entity.Property(e => e.CredentialId).HasMaxLength(200);
+            entity.Property(e => e.CredentialUrl).HasMaxLength(500);
         });
 
         // Company Configuration
@@ -258,6 +325,24 @@ public class JobPortalDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.Token).IsRequired();
+        });
+
+        // Notification Configuration
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.IsRead);
+            
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
         });
     }
 }

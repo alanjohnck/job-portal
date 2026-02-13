@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import JobCard from './components/JobCard';
 import './JobDetails.css';
-import { getJobDetails, getJobs } from '../../services/api';
+import { getJobDetails, getJobs, applyForJob, saveJob, unsaveJob } from '../../services/api';
 import { formatSalary, formatDate } from '../../utils/formatters';
 import {
     FaMapMarkerAlt,
@@ -12,6 +12,7 @@ import {
     FaClock,
     FaShareAlt,
     FaBookmark,
+    FaRegBookmark,
     FaArrowLeft,
     FaFacebookF,
     FaTwitter,
@@ -30,6 +31,8 @@ const JobDetails = () => {
     const [job, setJob] = useState(null);
     const [relatedJobs, setRelatedJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isSaved, setIsSaved] = useState(false);
+    const [saveLoading, setSaveLoading] = useState(false);
 
     useEffect(() => {
         const fetchJob = async () => {
@@ -43,7 +46,7 @@ const JobDetails = () => {
                         title: apiJob.title,
                         company: apiJob.company?.name || 'Unknown',
                         logo: apiJob.company?.logo,
-                        type: apiJob.jobType,
+                        type: apiJob.jobType || 'Full-time',
                         salary: formatSalary(apiJob.minSalary, apiJob.maxSalary, apiJob.salaryCurrency, apiJob.salaryPeriod),
                         posted: formatDate(apiJob.createdAt),
                         description: apiJob.description || '',
@@ -54,6 +57,7 @@ const JobDetails = () => {
                         level: apiJob.experienceLevel,
                     };
                     setJob(mappedJob);
+                    setIsSaved(!!apiJob.isSaved);
 
                     // Fetch related jobs based on category, excluding current job
                     const relatedResp = await getJobs({
@@ -94,18 +98,80 @@ const JobDetails = () => {
 
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [applied, setApplied] = useState(false);
+    const [applyLoading, setApplyLoading] = useState(false);
+    const [applyError, setApplyError] = useState(null);
+    const [coverLetter, setCoverLetter] = useState('');
+    const [resumeUrl, setResumeUrl] = useState('');
+    const [resumeFile, setResumeFile] = useState(null);
 
     if (loading) return <div className="loading-spinner">Loading job details...</div>;
     if (!job) return <div className="not-found">Job not found or failed to load.</div>;
 
     const handleApply = () => {
         setShowApplyModal(true);
+        setApplyError(null);
     };
 
-    const handleFinalSubmit = (e) => {
+    const handleToggleSave = async () => {
+        if (!job?.id) return;
+        setSaveLoading(true);
+        try {
+            if (isSaved) {
+                await unsaveJob(job.id);
+                setIsSaved(false);
+            } else {
+                await saveJob(job.id);
+                setIsSaved(true);
+            }
+        } catch (err) {
+            console.error('Error toggling save job:', err);
+        } finally {
+            setSaveLoading(false);
+        }
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setResumeFile(file);
+            // In a real app, you would upload this to a server and get a URL
+            // For now, we'll simulate with a placeholder
+            setResumeUrl(`https://example.com/resumes/${file.name}`);
+        }
+    };
+
+    const handleFinalSubmit = async (e) => {
         e.preventDefault();
-        setApplied(true);
-        setTimeout(() => setShowApplyModal(false), 2000);
+        setApplyLoading(true);
+        setApplyError(null);
+
+        try {
+            // Validate inputs
+            if (!resumeUrl && !resumeFile) {
+                throw new Error('Please upload a resume or provide a resume URL');
+            }
+
+            // In a production app, you would upload the file to a storage service first
+            // and get the URL. For now, we'll use the URL directly or the simulated one
+            const finalResumeUrl = resumeUrl || `https://example.com/resumes/${resumeFile?.name}`;
+
+            const response = await applyForJob(id, coverLetter, finalResumeUrl);
+
+            if (response.success) {
+                setApplied(true);
+                setTimeout(() => {
+                    setShowApplyModal(false);
+                    setApplied(true);
+                }, 2000);
+            } else {
+                throw new Error(response.error?.message || 'Failed to apply for job');
+            }
+        } catch (err) {
+            console.error('Error applying for job:', err);
+            setApplyError(err.message);
+        } finally {
+            setApplyLoading(false);
+        }
     };
 
     return (
@@ -118,16 +184,70 @@ const JobDetails = () => {
                         {!applied ? (
                             <>
                                 <h2>Apply for {job.title}</h2>
-                                <p>Please upload your resume to complete the application.</p>
+                                <p>Please provide your details to complete the application.</p>
+                                
+                                {applyError && (
+                                    <div className="error-message" style={{color: 'red', marginBottom: '10px'}}>
+                                        {applyError}
+                                    </div>
+                                )}
+                                
                                 <form className="upload-form" onSubmit={handleFinalSubmit}>
+                                    <div className="form-group" style={{marginBottom: '15px'}}>
+                                        <label style={{display: 'block', marginBottom: '5px'}}>Cover Letter (Optional)</label>
+                                        <textarea 
+                                            className="premium-textarea"
+                                            placeholder="Write a brief cover letter..."
+                                            value={coverLetter}
+                                            onChange={(e) => setCoverLetter(e.target.value)}
+                                            rows="4"
+                                            style={{width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px'}}
+                                        />
+                                    </div>
+                                    
+                                    <div className="form-group" style={{marginBottom: '15px'}}>
+                                        <label style={{display: 'block', marginBottom: '5px'}}>Resume URL (Optional)</label>
+                                        <input 
+                                            type="url"
+                                            className="premium-input"
+                                            placeholder="https://drive.google.com/..."
+                                            value={resumeUrl}
+                                            onChange={(e) => setResumeUrl(e.target.value)}
+                                            style={{width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px'}}
+                                        />
+                                        <small style={{color: '#666'}}>Provide a link to your resume (Google Drive, Dropbox, etc.)</small>
+                                    </div>
+                                    
+                                    <div style={{textAlign: 'center', margin: '10px 0', color: '#666'}}>OR</div>
+                                    
                                     <div className="upload-box" onClick={() => document.getElementById('resume-file').click()}>
                                         <FaBriefcase className="upload-icon" />
-                                        <span>Click to upload PDF or DOCX</span>
-                                        <input type="file" id="resume-file" hidden accept=".pdf,.doc,.docx" required />
+                                        <span>{resumeFile ? resumeFile.name : 'Click to upload PDF or DOCX'}</span>
+                                        <input 
+                                            type="file" 
+                                            id="resume-file" 
+                                            hidden 
+                                            accept=".pdf,.doc,.docx" 
+                                            onChange={handleFileChange}
+                                        />
                                     </div>
+                                    
                                     <div className="modal-actions">
-                                        <button type="button" className="cancel-btn" onClick={() => setShowApplyModal(false)}>Cancel</button>
-                                        <button type="submit" className="submit-btn">Submit Application</button>
+                                        <button 
+                                            type="button" 
+                                            className="cancel-btn" 
+                                            onClick={() => setShowApplyModal(false)}
+                                            disabled={applyLoading}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button 
+                                            type="submit" 
+                                            className="submit-btn"
+                                            disabled={applyLoading}
+                                        >
+                                            {applyLoading ? 'Submitting...' : 'Submit Application'}
+                                        </button>
                                     </div>
                                 </form>
                             </>
@@ -170,7 +290,14 @@ const JobDetails = () => {
                     </div>
 
                     <div className="header-actions">
-                        <button className="save-btn"><FaBookmark /></button>
+                        <button
+                            className={`save-btn ${isSaved ? 'active' : ''}`}
+                            onClick={handleToggleSave}
+                            disabled={saveLoading}
+                            aria-label={isSaved ? 'Unsave job' : 'Save job'}
+                        >
+                            {isSaved ? <FaBookmark /> : <FaRegBookmark />}
+                        </button>
                         <button className="apply-btn-primary" onClick={handleApply}>{applied ? 'Applied' : 'Apply Now'}</button>
                     </div>
                 </div>

@@ -199,7 +199,7 @@ public class CandidateService : ICandidateService
         });
     }
 
-    public async Task<ApiResponse<JobDto>> GetJobDetailsAsync(Guid jobId, Guid userId)
+    public async Task<ApiResponse<JobDto>> GetJobDetailsAsync(Guid jobId, Guid? userId)
     {
         var job = await _context.Jobs
             .Include(j => j.Company)
@@ -210,9 +210,15 @@ public class CandidateService : ICandidateService
         if (job == null)
             return ApiResponse<JobDto>.ErrorResponse("Job not found", "NOT_FOUND");
 
-        var candidate = await _context.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
-        var hasApplied = candidate != null && job.Applications.Any(a => a.CandidateId == candidate.Id);
-        var isSaved = candidate != null && job.SavedJobs.Any(s => s.CandidateId == candidate.Id);
+        bool hasApplied = false;
+        bool isSaved = false;
+        
+        if (userId.HasValue)
+        {
+            var candidate = await _context.Candidates.FirstOrDefaultAsync(c => c.UserId == userId.Value);
+            hasApplied = candidate != null && job.Applications.Any(a => a.CandidateId == candidate.Id);
+            isSaved = candidate != null && job.SavedJobs.Any(s => s.CandidateId == candidate.Id);
+        }
 
         var jobDto = new JobDto
         {
@@ -431,5 +437,196 @@ public class CandidateService : ICandidateService
         }).ToList();
 
         return ApiResponse<List<JobDto>>.SuccessResponse(jobDtos);
+    }
+
+    public async Task<ApiResponse<PaginationResponse<CompanyListDto>>> SearchCompaniesAsync(string? keyword, string? industry, int page, int pageSize)
+    {
+        var query = _context.Companies.AsQueryable();
+
+        // Apply filters
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            query = query.Where(c => 
+                c.CompanyName.ToLower().Contains(keyword.ToLower()) ||
+                (c.Description != null && c.Description.ToLower().Contains(keyword.ToLower()))
+            );
+        }
+
+        if (!string.IsNullOrWhiteSpace(industry))
+        {
+            query = query.Where(c => c.Industry != null && c.Industry.ToLower() == industry.ToLower());
+        }
+
+        // Order by featured first, then by name
+        query = query.OrderByDescending(c => c.IsFeatured).ThenBy(c => c.CompanyName);
+
+        // Get total count
+        var totalItems = await query.CountAsync();
+
+        // Apply pagination
+        var companies = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        // Get open jobs count for each company
+        var companyIds = companies.Select(c => c.Id).ToList();
+        var jobCounts = await _context.Jobs
+            .Where(j => companyIds.Contains(j.CompanyId) && j.Status == "Active")
+            .GroupBy(j => j.CompanyId)
+            .Select(g => new { CompanyId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CompanyId, x => x.Count);
+
+        // Map to DTOs
+        var companyDtos = companies.Select(c => new CompanyListDto
+        {
+            Id = c.Id,
+            CompanyName = c.CompanyName,
+            Logo = c.Logo,
+            BannerImage = c.BannerImage,
+            Industry = c.Industry,
+            CompanySize = c.CompanySize,
+            Description = c.Description,
+            City = c.City,
+            State = c.State,
+            Country = c.Country,
+            Location = string.IsNullOrEmpty(c.City) ? (c.Country ?? "N/A") : $"{c.City}, {c.State ?? c.Country}",
+            OpenJobs = jobCounts.GetValueOrDefault(c.Id, 0),
+            TechStack = c.TechStack,
+            IsFeatured = c.IsFeatured
+        }).ToList();
+
+        var paginationResponse = new PaginationResponse<CompanyListDto>
+        {
+            Items = companyDtos,
+            Pagination = new PaginationMetadata
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
+                HasNextPage = page < (int)Math.Ceiling(totalItems / (double)pageSize),
+                HasPreviousPage = page > 1
+            }
+        };
+
+        return ApiResponse<PaginationResponse<CompanyListDto>>.SuccessResponse(paginationResponse);
+    }
+
+    public async Task<ApiResponse<CompanyProfileDto>> GetCompanyDetailsAsync(Guid companyId)
+    {
+        var company = await _context.Companies
+            .Include(c => c.User)
+            .FirstOrDefaultAsync(c => c.Id == companyId);
+
+        if (company == null)
+            return ApiResponse<CompanyProfileDto>.ErrorResponse("Company not found", "NOT_FOUND");
+
+        var profileDto = new CompanyProfileDto
+        {
+            Id = company.Id,
+            UserId = company.UserId,
+            CompanyName = company.CompanyName,
+            CompanyEmail = company.CompanyEmail,
+            PhoneNumber = company.PhoneNumber,
+            Website = company.Website,
+            Industry = company.Industry,
+            CompanySize = company.CompanySize,
+            Description = company.Description,
+            Logo = company.Logo,
+            BannerImage = company.BannerImage,
+            HeadquarterAddress = company.HeadquarterAddress,
+            City = company.City,
+            State = company.State,
+            Country = company.Country,
+            ZipCode = company.ZipCode,
+            LinkedInUrl = company.LinkedInUrl,
+            TwitterUrl = company.TwitterUrl,
+            FacebookUrl = company.FacebookUrl,
+            Founded = company.Founded,
+            TechStack = company.TechStack,
+            SubscriptionPlan = company.SubscriptionPlan,
+            SubscriptionExpiresAt = company.SubscriptionExpiresAt,
+            IsFeatured = company.IsFeatured,
+            CreatedAt = company.CreatedAt
+        };
+
+        return ApiResponse<CompanyProfileDto>.SuccessResponse(profileDto);
+    }
+
+    public async Task<ApiResponse<PaginationResponse<JobDto>>> GetCompanyJobsAsync(Guid companyId, int page, int pageSize)
+    {
+        var company = await _context.Companies.FirstOrDefaultAsync(c => c.Id == companyId);
+        if (company == null)
+            return ApiResponse<PaginationResponse<JobDto>>.ErrorResponse("Company not found", "NOT_FOUND");
+
+        var query = _context.Jobs
+            .Include(j => j.Company)
+            .Where(j => j.CompanyId == companyId && j.Status == "Active")
+            .OrderByDescending(j => j.CreatedAt);
+
+        var totalItems = await query.CountAsync();
+        
+        var jobs = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var jobDtos = jobs.Select(j => new JobDto
+        {
+            Id = j.Id,
+            Title = j.Title,
+            Description = j.Description,
+            Requirements = j.Requirements,
+            Responsibilities = j.Responsibilities,
+            JobType = j.JobType,
+            ExperienceLevel = j.ExperienceLevel,
+            MinSalary = j.MinSalary,
+            MaxSalary = j.MaxSalary,
+            SalaryCurrency = j.SalaryCurrency,
+            SalaryPeriod = j.SalaryPeriod,
+            Location = j.Location,
+            City = j.City,
+            State = j.State,
+            Country = j.Country,
+            IsRemote = j.IsRemote,
+            RequiredSkills = j.RequiredSkills,
+            Tags = j.Tags,
+            Category = j.Category,
+            Status = j.Status,
+            Deadline = j.Deadline,
+            Openings = j.Openings,
+            Education = j.Education,
+            Experience = j.Experience,
+            CreatedAt = j.CreatedAt,
+            Company = new CompanyBasicInfo
+            {
+                Id = j.Company.Id,
+                Name = j.Company.CompanyName,
+                Logo = j.Company.Logo,
+                Industry = j.Company.Industry,
+                CompanySize = j.Company.CompanySize,
+                Website = j.Company.Website
+            },
+            ApplicationsCount = 0,
+            HasApplied = false,
+            IsSaved = false
+        }).ToList();
+
+        var paginationResponse = new PaginationResponse<JobDto>
+        {
+            Items = jobDtos,
+            Pagination = new PaginationMetadata
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
+                HasNextPage = page < (int)Math.Ceiling(totalItems / (double)pageSize),
+                HasPreviousPage = page > 1
+            }
+        };
+
+        return ApiResponse<PaginationResponse<JobDto>>.SuccessResponse(paginationResponse);
     }
 }

@@ -27,12 +27,18 @@ function Login() {
       if (response.success) {
         localStorage.setItem('token', response.data.accessToken)
         localStorage.setItem('user', JSON.stringify(response.data.user))
-        // Verify response structure based on AuthController
-        // AuthController returns Ok(result). Result likely contains Token.
-        // Let's assume standard ApiResponse structure.
-
-        // Redirect based on role not strictly enforced here but usually candidate goes to find jobs
-        navigate('/candidate/find-jobs')
+        
+        // Redirect based on user role
+        const userRole = response.data.user?.role || response.data.user?.Role;
+        
+        if (userRole === 'Company') {
+          navigate('/company/dashboard')
+        } else if (userRole === 'Admin') {
+          navigate('/admin/dashboard')
+        } else {
+          // Default to candidate dashboard
+          navigate('/candidate/find-jobs')
+        }
       } else {
         setError(response.message || "Login failed")
       }

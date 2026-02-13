@@ -1,16 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MyProfile.css';
 import Header from './components/Header';
 import {
     FaPlus, FaTrash, FaDownload, FaEye, FaEdit,
     FaLinkedin, FaGithub, FaEnvelope, FaGlobe,
     FaGraduationCap, FaBriefcase, FaCode, FaTrophy,
-    FaArrowLeft, FaLink, FaUserCircle, FaMapMarkerAlt, FaPhoneAlt
+    FaArrowLeft, FaLink, FaUserCircle, FaMapMarkerAlt, FaPhoneAlt, FaSave
 } from 'react-icons/fa';
 import { IoCloseOutline } from 'react-icons/io5';
+import {
+    getCandidateProfile,
+    updateCandidateProfile,
+    updateProfilePicture,
+    updateResume,
+    deleteResume,
+    getWorkExperiences,
+    createWorkExperience,
+    updateWorkExperience,
+    deleteWorkExperience,
+    getEducations,
+    createEducation,
+    updateEducation,
+    deleteEducation,
+    getCertifications,
+    createCertification,
+    updateCertification,
+    deleteCertification,
+    updateSkills
+} from '../../services/api';
 
 const MyProfile = () => {
     const [editMode, setEditMode] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
+    const [candidateId, setCandidateId] = useState(null);
     const [profileData, setProfileData] = useState({
         name: 'James Joseph K',
         role: 'Full Stack Developer',
@@ -60,8 +84,396 @@ const MyProfile = () => {
         ]
     });
 
+    // Load profile data on mount
+    useEffect(() => {
+        loadProfileData();
+    }, []);
+
+    const loadProfileData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            const token = localStorage.getItem('token');
+            console.log('========== PROFILE LOAD START ==========');
+            console.log('[Auth] Token exists:', !!token);
+            console.log('[Auth] Token preview:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
+            console.log('[Environment] API URL:', import.meta.env.VITE_API_URL);
+            console.log('Loading candidate profile data...');
+            
+            // Fetch profile data
+            const profileResult = await getCandidateProfile();
+            console.log('[API] Profile response:', JSON.stringify(profileResult, null, 2));
+            
+            if (profileResult.success && profileResult.data) {
+                const profile = profileResult.data;
+                const id = profile.candidateId || profile.id;
+                setCandidateId(id);
+                console.log('[Profile] Loaded - ID:', id);
+                console.log('[Profile] Name:', profile.fullName);
+                console.log('[Profile] Email:', profile.email);
+                
+                // Fetch work experiences
+                const expResult = await getWorkExperiences();
+                console.log('[API] Work Experiences response:', JSON.stringify(expResult, null, 2));
+                const experiences = expResult.success && expResult.data ? expResult.data : [];
+                console.log('[Profile] Loaded', experiences.length, 'work experiences');
+                
+                // Fetch educations
+                const eduResult = await getEducations();
+                console.log('[API] Educations response:', JSON.stringify(eduResult, null, 2));
+                const educations = eduResult.success && eduResult.data ? eduResult.data : [];
+                console.log('[Profile] Loaded', educations.length, 'educations');
+                
+                // Fetch certifications
+                const certResult = await getCertifications();
+                console.log('[API] Certifications response:', JSON.stringify(certResult, null, 2));
+                const certifications = certResult.success && certResult.data ? certResult.data : [];
+                console.log('[Profile] Loaded', certifications.length, 'certifications');
+                
+                setProfileData(prev => ({
+                    ...prev,
+                    name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || prev.name,
+                    role: profile.currentJobTitle || prev.role,
+                    bio: profile.bio || prev.bio,
+                    profilePic: profile.profilePicture || prev.profilePic,
+                    email: profile.email || prev.email,
+                    phone: profile.phoneNumber || prev.phone,
+                    location: profile.currentLocation || prev.location,
+                    linkedinLink: profile.linkedInUrl || prev.linkedinLink,
+                    githubLink: profile.githubUrl || prev.githubLink,
+                    website: profile.portfolioUrl || prev.website,
+                    skills: (profile.skills && profile.skills.length > 0) ? profile.skills.join(', ') : prev.skills,
+                    experience: experiences.length > 0 ? experiences.map(exp => ({
+                        id: exp.id,
+                        company: exp.companyName || '',
+                        role: exp.jobTitle || '',
+                        period: `${formatDate(exp.startDate)} - ${exp.isCurrentJob ? 'Present' : formatDate(exp.endDate)}`,
+                        desc: exp.description || '',
+                        achievements: exp.achievements || [],
+                        technologies: exp.technologiesUsed || []
+                    })) : prev.experience,
+                    education: educations.length > 0 ? educations.map(edu => ({
+                        id: edu.id,
+                        school: edu.institutionName || '',
+                        degree: edu.degree || '',
+                        fieldOfStudy: edu.fieldOfStudy || '',
+                        grade: edu.grade || '',
+                        period: `${formatDate(edu.startDate)} - ${edu.isCurrentlyStudying ? 'Present' : formatDate(edu.endDate)}`
+                    })) : prev.education,
+                    certifications: certifications.length > 0 ? certifications.map(cert => ({
+                        id: cert.id,
+                        name: cert.name || '',
+                        issuingOrganization: cert.issuingOrganization || '',
+                        credentialId: cert.credentialId || '',
+                        credentialUrl: cert.credentialUrl || ''
+                    })) : prev.certifications
+                }));
+                
+                console.log('[Profile] ✅ Data populated successfully!');
+            } else {
+                console.warn('[Profile] ⚠️ API returned no data:', profileResult);
+                setError(`Unable to load profile: ${profileResult.message || 'No data returned from server'}`);
+            }
+        } catch (err) {
+            console.error('[Profile] ❌ Error loading profile:', err);
+            setError(`Failed to load profile: ${err.message}. Check console for details.`);
+            // Keep default data if fetch fails
+        } finally {
+            setLoading(false);
+            console.log('[Profile] Loading complete');
+        }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    };
+
+    const handleSaveProfile = async () => {
+        try {
+            setSaving(true);
+            setError(null);
+            
+            // Split name into first and last
+            const nameParts = profileData.name.trim().split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+            
+            // Update basic profile
+            await updateCandidateProfile({
+                firstName: firstName,
+                lastName: lastName,
+                currentJobTitle: profileData.role,
+                bio: profileData.bio,
+                phoneNumber: profileData.phone,
+                currentLocation: profileData.location,
+                linkedInUrl: profileData.linkedinLink,
+                githubUrl: profileData.githubLink,
+                portfolioUrl: profileData.website,
+                profilePicture: profileData.profilePic,
+                skills: profileData.skills.split(',').map(s => s.trim()).filter(s => s)
+            });
+            
+            // Update skills
+            const skillsArray = profileData.skills.split(',').map(s => s.trim()).filter(s => s);
+            await updateSkills(skillsArray);
+            
+            alert('Profile saved successfully!');
+            await loadProfileData(); // Reload to show updated data
+        } catch (err) {
+            setError(err.message || 'Failed to save profile');
+            console.error('Error saving profile:', err);
+            alert('Failed to save profile: ' + err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleDownloadPDF = () => {
         window.print();
+    };
+
+    // Work Experience Handlers
+    const handleAddExperience = async () => {
+        const newExp = {
+            id: Date.now(),
+            company: '',
+            role: '',
+            period: '',
+            desc: ''
+        };
+        setProfileData(prev => ({
+            ...prev,
+            experience: [...prev.experience, newExp]
+        }));
+    };
+
+    const handleUpdateExperience = async (id, field, value) => {
+        setProfileData(prev => ({
+            ...prev,
+            experience: prev.experience.map(item => 
+                item.id === id ? { ...item, [field]: value } : item
+            )
+        }));
+    };
+
+    const handleDeleteExperience = async (id) => {
+        try {
+            // If it's a new item (temp ID), just remove from state
+            if (typeof id === 'number') {
+                setProfileData(prev => ({
+                    ...prev,
+                    experience: prev.experience.filter(item => item.id !== id)
+                }));
+                return;
+            }
+            
+            // Otherwise delete from API
+            await deleteWorkExperience(id);
+            setProfileData(prev => ({
+                ...prev,
+                experience: prev.experience.filter(item => item.id !== id)
+            }));
+            alert('Experience deleted successfully!');
+        } catch (err) {
+            alert('Failed to delete experience: ' + err.message);
+        }
+    };
+
+    const handleSaveExperience = async (exp) => {
+        try {
+            // Parse dates from period string
+            const [startStr, endStr] = exp.period.split('-').map(s => s.trim());
+            const isCurrentJob = endStr.toLowerCase() === 'present';
+            
+            const expData = {
+                jobTitle: exp.role,
+                companyName: exp.company,
+                employmentType: 'Full-time',
+                location: '',
+                startDate: new Date(startStr).toISOString(),
+                endDate: isCurrentJob ? null : new Date(endStr).toISOString(),
+                isCurrentJob,
+                description: exp.desc,
+                achievements: exp.achievements || [],
+                technologies: exp.technologies || []
+            };
+            
+            if (typeof exp.id === 'number') {
+                // Create new
+                const result = await createWorkExperience(expData);
+                if (result.success) {
+                    // Update with real ID
+                    setProfileData(prev => ({
+                        ...prev,
+                        experience: prev.experience.map(item => 
+                            item.id === exp.id ? { ...item, id: result.data.id } : item
+                        )
+                    }));
+                    alert('Experience added successfully!');
+                }
+            } else {
+                // Update existing
+                await updateWorkExperience(exp.id, expData);
+                alert('Experience updated successfully!');
+            }
+        } catch (err) {
+            alert('Failed to save experience: ' + err.message);
+        }
+    };
+
+    // Education Handlers
+    const handleAddEducation = () => {
+        const newEdu = {
+            id: Date.now(),
+            school: '',
+            degree: '',
+            period: ''
+        };
+        setProfileData(prev => ({
+            ...prev,
+            education: [...prev.education, newEdu]
+        }));
+    };
+
+    const handleUpdateEducation = (id, field, value) => {
+        setProfileData(prev => ({
+            ...prev,
+            education: prev.education.map(item => 
+                item.id === id ? { ...item, [field]: value } : item
+            )
+        }));
+    };
+
+    const handleDeleteEducation = async (id) => {
+        try {
+            if (typeof id === 'number') {
+                setProfileData(prev => ({
+                    ...prev,
+                    education: prev.education.filter(item => item.id !== id)
+                }));
+                return;
+            }
+            
+            await deleteEducation(id);
+            setProfileData(prev => ({
+                ...prev,
+                education: prev.education.filter(item => item.id !== id)
+            }));
+            alert('Education deleted successfully!');
+        } catch (err) {
+            alert('Failed to delete education: ' + err.message);
+        }
+    };
+
+    const handleSaveEducation = async (edu) => {
+        try {
+            const [startStr, endStr] = edu.period.split('-').map(s => s.trim());
+            const isCurrentlyStudying = endStr.toLowerCase() === 'present';
+            
+            const eduData = {
+                institutionName: edu.school,
+                degree: edu.degree,
+                fieldOfStudy: edu.fieldOfStudy || '',
+                startDate: new Date(startStr).toISOString(),
+                endDate: isCurrentlyStudying ? null : new Date(endStr).toISOString(),
+                isCurrentlyStudying,
+                grade: edu.grade || ''
+            };
+            
+            if (typeof edu.id === 'number') {
+                const result = await createEducation(eduData);
+                if (result.success) {
+                    setProfileData(prev => ({
+                        ...prev,
+                        education: prev.education.map(item => 
+                            item.id === edu.id ? { ...item, id: result.data.id } : item
+                        )
+                    }));
+                    alert('Education added successfully!');
+                }
+            } else {
+                await updateEducation(edu.id, eduData);
+                alert('Education updated successfully!');
+            }
+        } catch (err) {
+            alert('Failed to save education: ' + err.message);
+        }
+    };
+
+    // Certification Handlers
+    const handleAddCertification = () => {
+        const newCert = {
+            id: Date.now(),
+            name: ''
+        };
+        setProfileData(prev => ({
+            ...prev,
+            certifications: [...prev.certifications, newCert]
+        }));
+    };
+
+    const handleUpdateCertification = (id, field, value) => {
+        setProfileData(prev => ({
+            ...prev,
+            certifications: prev.certifications.map(item => 
+                item.id === id ? { ...item, [field]: value } : item
+            )
+        }));
+    };
+
+    const handleDeleteCertification = async (id) => {
+        try {
+            if (typeof id === 'number') {
+                setProfileData(prev => ({
+                    ...prev,
+                    certifications: prev.certifications.filter(item => item.id !== id)
+                }));
+                return;
+            }
+            
+            await deleteCertification(id);
+            setProfileData(prev => ({
+                ...prev,
+                certifications: prev.certifications.filter(item => item.id !== id)
+            }));
+            alert('Certification deleted successfully!');
+        } catch (err) {
+            alert('Failed to delete certification: ' + err.message);
+        }
+    };
+
+    const handleSaveCertification = async (cert) => {
+        try {
+            const certData = {
+                name: cert.name,
+                issuingOrganization: cert.issuingOrganization || '',
+                issueDate: cert.issueDate ? new Date(cert.issueDate).toISOString() : new Date().toISOString(),
+                expiryDate: cert.expiryDate ? new Date(cert.expiryDate).toISOString() : null,
+                credentialId: cert.credentialId || '',
+                credentialUrl: cert.credentialUrl || ''
+            };
+            
+            if (typeof cert.id === 'number') {
+                const result = await createCertification(certData);
+                if (result.success) {
+                    setProfileData(prev => ({
+                        ...prev,
+                        certifications: prev.certifications.map(item => 
+                            item.id === cert.id ? { ...item, id: result.data.id } : item
+                        )
+                    }));
+                    alert('Certification added successfully!');
+                }
+            } else {
+                await updateCertification(cert.id, certData);
+                alert('Certification updated successfully!');
+            }
+        } catch (err) {
+            alert('Failed to save certification: ' + err.message);
+        }
     };
 
     // Correct Item Handlers
@@ -90,6 +502,57 @@ const MyProfile = () => {
         <div className="profile-builder-page">
             <Header />
 
+            {loading && (
+                <div style={{ 
+                    position: 'fixed', 
+                    top: 0, 
+                    left: 0, 
+                    right: 0, 
+                    bottom: 0, 
+                    backgroundColor: 'rgba(0,0,0,0.5)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    zIndex: 9999 
+                }}>
+                    <div style={{ 
+                        backgroundColor: 'white', 
+                        padding: '30px', 
+                        borderRadius: '10px', 
+                        textAlign: 'center' 
+                    }}>
+                        <div style={{ fontSize: '18px', marginBottom: '10px' }}>Loading Profile...</div>
+                        <div style={{ fontSize: '40px', animation: 'spin 1s linear infinite' }}>⏳</div>
+                    </div>
+                </div>
+            )}
+
+            {error && (
+                <div style={{ 
+                    backgroundColor: '#fee', 
+                    color: '#c33', 
+                    padding: '15px', 
+                    margin: '20px', 
+                    borderRadius: '8px',
+                    border: '1px solid #fcc'
+                }}>
+                    <strong>Error:</strong> {error}
+                </div>
+            )}
+
+            {candidateId && !loading && (
+                <div style={{ 
+                    backgroundColor: '#e0f7fa', 
+                    color: '#006064', 
+                    padding: '8px 20px', 
+                    textAlign: 'center',
+                    fontSize: '13px',
+                    fontWeight: '500'
+                }}>
+                    Candidate ID: {candidateId}
+                </div>
+            )}
+
             <div className="builder-toolbar no-print">
                 <div className="container">
                     <div className="toolbar-inner">
@@ -107,6 +570,9 @@ const MyProfile = () => {
                             </div>
                         </div>
                         <div className="spacer"></div>
+                        <button className="download-btn-premium" onClick={handleSaveProfile} disabled={saving} style={{marginRight: '10px', backgroundColor: '#10b981'}}>
+                            <FaSave /> {saving ? 'Saving...' : 'Save Profile'}
+                        </button>
                         <button className="download-btn-premium" onClick={handleDownloadPDF}>
                             <FaDownload /> Download ATS PDF
                         </button>
@@ -199,7 +665,7 @@ const MyProfile = () => {
                                 <section className="form-section">
                                     <div className="section-header">
                                         <h3 className="form-section-title"><FaBriefcase /> Work Experience</h3>
-                                        <button className="add-btn-small" onClick={() => addItem('experience', { company: '', role: '', period: '', desc: '' })}>
+                                        <button className="add-btn-small" onClick={handleAddExperience}>
                                             <FaPlus /> Add
                                         </button>
                                     </div>
@@ -207,13 +673,13 @@ const MyProfile = () => {
                                         <div key={exp.id} className="form-item-card">
                                             <div className="item-action-bar">
                                                 <span className="item-label">Experience Entry</span>
-                                                <FaTrash className="item-delete-icon" onClick={() => removeItem('experience', exp.id)} />
+                                                <FaTrash className="item-delete-icon" onClick={() => handleDeleteExperience(exp.id)} />
                                             </div>
                                             <div className="item-inputs">
-                                                <input className="full-style-input" placeholder="Company Name" value={exp.company} onChange={(e) => updateItem('experience', exp.id, 'company', e.target.value)} />
-                                                <input className="full-style-input" placeholder="Your Role" value={exp.role} onChange={(e) => updateItem('experience', exp.id, 'role', e.target.value)} />
-                                                <input className="full-style-input" placeholder="Period (e.g. 2021 - Present)" value={exp.period} onChange={(e) => updateItem('experience', exp.id, 'period', e.target.value)} />
-                                                <textarea className="full-style-input" placeholder="Job Description" value={exp.desc} onChange={(e) => updateItem('experience', exp.id, 'desc', e.target.value)} />
+                                                <input className="full-style-input" placeholder="Company Name" value={exp.company} onChange={(e) => handleUpdateExperience(exp.id, 'company', e.target.value)} />
+                                                <input className="full-style-input" placeholder="Your Role" value={exp.role} onChange={(e) => handleUpdateExperience(exp.id, 'role', e.target.value)} />
+                                                <input className="full-style-input" placeholder="Period (e.g. Jan 2021 - Present)" value={exp.period} onChange={(e) => handleUpdateExperience(exp.id, 'period', e.target.value)} />
+                                                <textarea className="full-style-input" placeholder="Job Description" value={exp.desc} onChange={(e) => handleUpdateExperience(exp.id, 'desc', e.target.value)} />
                                             </div>
                                         </div>
                                     ))}
@@ -222,7 +688,7 @@ const MyProfile = () => {
                                 <section className="form-section">
                                     <div className="section-header">
                                         <h3 className="form-section-title"><FaGraduationCap /> Education</h3>
-                                        <button className="add-btn-small" onClick={() => addItem('education', { school: '', degree: '', period: '' })}>
+                                        <button className="add-btn-small" onClick={handleAddEducation}>
                                             <FaPlus /> Add
                                         </button>
                                     </div>
@@ -230,12 +696,12 @@ const MyProfile = () => {
                                         <div key={edu.id} className="form-item-card">
                                             <div className="item-action-bar">
                                                 <span className="item-label">Education Entry</span>
-                                                <FaTrash className="item-delete-icon" onClick={() => removeItem('education', edu.id)} />
+                                                <FaTrash className="item-delete-icon" onClick={() => handleDeleteEducation(edu.id)} />
                                             </div>
                                             <div className="item-inputs">
-                                                <input className="full-style-input" placeholder="School/University" value={edu.school} onChange={(e) => updateItem('education', edu.id, 'school', e.target.value)} />
-                                                <input className="full-style-input" placeholder="Degree" value={edu.degree} onChange={(e) => updateItem('education', edu.id, 'degree', e.target.value)} />
-                                                <input className="full-style-input" placeholder="Period" value={edu.period} onChange={(e) => updateItem('education', edu.id, 'period', e.target.value)} />
+                                                <input className="full-style-input" placeholder="School/University" value={edu.school} onChange={(e) => handleUpdateEducation(edu.id, 'school', e.target.value)} />
+                                                <input className="full-style-input" placeholder="Degree" value={edu.degree} onChange={(e) => handleUpdateEducation(edu.id, 'degree', e.target.value)} />
+                                                <input className="full-style-input" placeholder="Period (e.g. Sep 2021 - Present)" value={edu.period} onChange={(e) => handleUpdateEducation(edu.id, 'period', e.target.value)} />
                                             </div>
                                         </div>
                                     ))}
@@ -244,7 +710,7 @@ const MyProfile = () => {
                                 <section className="form-section">
                                     <div className="section-header">
                                         <h3 className="form-section-title"><FaTrophy /> Certifications</h3>
-                                        <button className="add-btn-small" onClick={() => addItem('certifications', { name: '' })}>
+                                        <button className="add-btn-small" onClick={handleAddCertification}>
                                             <FaPlus /> Add
                                         </button>
                                     </div>
@@ -252,10 +718,10 @@ const MyProfile = () => {
                                         <div key={cert.id} className="form-item-card">
                                             <div className="item-action-bar">
                                                 <span className="item-label">Certification</span>
-                                                <FaTrash className="item-delete-icon" onClick={() => removeItem('certifications', cert.id)} />
+                                                <FaTrash className="item-delete-icon" onClick={() => handleDeleteCertification(cert.id)} />
                                             </div>
                                             <div className="item-inputs">
-                                                <input className="full-style-input" placeholder="Certification Name" value={cert.name} onChange={(e) => updateItem('certifications', cert.id, 'name', e.target.value)} />
+                                                <input className="full-style-input" placeholder="Certification Name" value={cert.name} onChange={(e) => handleUpdateCertification(cert.id, 'name', e.target.value)} />
                                             </div>
                                         </div>
                                     ))}

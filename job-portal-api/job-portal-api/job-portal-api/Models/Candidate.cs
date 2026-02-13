@@ -41,4 +41,7 @@ public class Candidate
     public ICollection<JobApplication> Applications { get; set; } = new List<JobApplication>();
     public ICollection<SavedJob> SavedJobs { get; set; } = new List<SavedJob>();
     public ICollection<TestResult> TestResults { get; set; } = new List<TestResult>();
+    public ICollection<WorkExperience> WorkExperiences { get; set; } = new List<WorkExperience>();
+    public ICollection<Education> Educations { get; set; } = new List<Education>();
+    public ICollection<Certification> Certifications { get; set; } = new List<Certification>();
 }

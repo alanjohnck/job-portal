@@ -64,9 +64,20 @@ public class CandidateController : ControllerBase
     }
 
     [HttpGet("jobs/{jobId}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetJobDetails(Guid jobId)
     {
-        var userId = GetUserId();
+        // Get userId only if user is authenticated
+        Guid? userId = null;
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null)
+            {
+                userId = Guid.Parse(userIdClaim.Value);
+            }
+        }
+        
         var result = await _candidateService.GetJobDetailsAsync(jobId, userId);
         if (!result.Success) return NotFound(result);
         return Ok(result);
@@ -120,6 +131,39 @@ public class CandidateController : ControllerBase
     {
         var userId = GetUserId();
         var result = await _candidateService.GetSavedJobsAsync(userId);
+        return Ok(result);
+    }
+
+    [HttpGet("companies/search")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SearchCompanies(
+        [FromQuery] string? keyword,
+        [FromQuery] string? industry,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var result = await _candidateService.SearchCompaniesAsync(keyword, industry, page, pageSize);
+        return Ok(result);
+    }
+
+    [HttpGet("companies/{companyId}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCompanyDetails(Guid companyId)
+    {
+        var result = await _candidateService.GetCompanyDetailsAsync(companyId);
+        if (!result.Success) return NotFound(result);
+        return Ok(result);
+    }
+
+    [HttpGet("companies/{companyId}/jobs")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCompanyJobs(
+        Guid companyId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var result = await _candidateService.GetCompanyJobsAsync(companyId, page, pageSize);
+        if (!result.Success) return NotFound(result);
         return Ok(result);
     }
 }
