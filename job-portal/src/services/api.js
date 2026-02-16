@@ -157,46 +157,6 @@ export const removeSavedCandidate = async (candidateId) => {
     return response.json();
 };
 
-export const searchCandidates = async (keyword, location, experienceYears, skills, page = 1, pageSize = 20) => {
-    const params = new URLSearchParams({ page, pageSize });
-    if (keyword) params.append('keyword', keyword);
-    if (location) params.append('location', location);
-    if (experienceYears != null && experienceYears !== '') params.append('experienceYears', experienceYears);
-    if (skills) params.append('skills', skills);
-
-    const response = await fetch(`${API_URL}/companies/candidates/search?${params}`, {
-        headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to search candidates');
-    return response.json();
-};
-
-export const saveCandidate = async (candidateId, notes = null) => {
-    const response = await fetch(`${API_URL}/companies/candidates/${candidateId}/save`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(notes)
-    });
-    if (!response.ok) throw new Error('Failed to save candidate');
-    return response.json();
-};
-
-export const getSavedCandidates = async () => {
-    const response = await fetch(`${API_URL}/companies/candidates/saved`, {
-        headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to fetch saved candidates');
-    return response.json();
-};
-
-export const removeSavedCandidate = async (candidateId) => {
-    const response = await fetch(`${API_URL}/companies/candidates/${candidateId}/save`, {
-        method: 'DELETE',
-        headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to remove saved candidate');
-    return response.json();
-};
 
 export const updateCompanyProfile = async (profileData) => {
     const response = await fetch(`${API_URL}/companies/profile`, {
