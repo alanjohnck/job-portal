@@ -10,7 +10,7 @@ public class CreateMockTestRequest
     public int DurationMinutes { get; set; }
     public int PassingScore { get; set; }
     public string Status { get; set; } = "Scheduled";
-    public List<TestQuestionDto> Questions { get; set; } = new();
+    public List<MockTestQuestionDto> Questions { get; set; } = new();
 }
 
 public class MockTestDto
@@ -27,19 +27,19 @@ public class MockTestDto
     public string Status { get; set; } = string.Empty;
     public int TotalApplicants { get; set; }
     public CompanyBasicInfo Company { get; set; } = new();
-    public List<TestQuestionDto> Questions { get; set; } = new();
+    public List<MockTestQuestionDto> Questions { get; set; } = new();
 }
 
-public class TestQuestionDto
+public class MockTestQuestionDto
 {
     public Guid Id { get; set; }
     public string QuestionText { get; set; } = string.Empty;
     public int Points { get; set; }
     public int OrderNumber { get; set; }
-    public List<TestQuestionOptionDto> Options { get; set; } = new();
+    public List<MockTestQuestionOptionDto> Options { get; set; } = new();
 }
 
-public class TestQuestionOptionDto
+public class MockTestQuestionOptionDto
 {
     public Guid Id { get; set; }
     public string OptionText { get; set; } = string.Empty;

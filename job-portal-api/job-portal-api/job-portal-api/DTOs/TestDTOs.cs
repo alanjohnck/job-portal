@@ -74,8 +74,25 @@ public class TestDetailDto
     public DateTime CreatedAt { get; set; }
 }
 
-    public class TestAttemptDto
-    {
+public class TestQuestionDto
+{
+    public Guid Id { get; set; }
+    public string QuestionText { get; set; } = string.Empty;
+    public int OrderNumber { get; set; }
+    public int Points { get; set; }
+    public List<TestOptionDto> Options { get; set; } = new();
+}
+
+public class TestOptionDto
+{
+    public Guid Id { get; set; }
+    public string OptionText { get; set; } = string.Empty;
+    public int OrderNumber { get; set; }
+    public bool? IsCorrect { get; set; } // Null for candidates, true/false for company
+}
+
+public class TestAttemptDto
+{
     public Guid Id { get; set; }
     public Guid TestId { get; set; }
     public string TestTitle { get; set; } = string.Empty;

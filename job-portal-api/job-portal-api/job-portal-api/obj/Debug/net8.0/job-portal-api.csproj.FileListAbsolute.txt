@@ -302,4 +302,3 @@ C:\Users\A lan John Chacko\OneDrive - Nalashaa Solutions India Pvt Ltd\Desktop\j
 C:\Users\A lan John Chacko\OneDrive - Nalashaa Solutions India Pvt Ltd\Desktop\job-portal\job-portal-api\job-portal-api\job-portal-api\bin\Debug\net8.0\job-portal-api.pdb
 C:\Users\A lan John Chacko\OneDrive - Nalashaa Solutions India Pvt Ltd\Desktop\job-portal\job-portal-api\job-portal-api\job-portal-api\obj\Debug\net8.0\job-portal-api.genruntimeconfig.cache
 C:\Users\A lan John Chacko\OneDrive - Nalashaa Solutions India Pvt Ltd\Desktop\job-portal\job-portal-api\job-portal-api\job-portal-api\obj\Debug\net8.0\ref\job-portal-api.dll
-C:\Users\A lan John Chacko\OneDrive - Nalashaa Solutions India Pvt Ltd\Desktop\job-portal\job-portal-api\job-portal-api\job-portal-api\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

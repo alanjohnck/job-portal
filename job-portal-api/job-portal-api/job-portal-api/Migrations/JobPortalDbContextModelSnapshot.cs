@@ -649,6 +649,7 @@ namespace JobPortalApi.Migrations
                     b.ToTable("Projects");
                 });
 
+
             modelBuilder.Entity("JobPortalApi.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")

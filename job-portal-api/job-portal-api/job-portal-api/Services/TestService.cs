@@ -105,7 +105,7 @@ public class TestService : ITestService
             QuestionText = question.QuestionText,
             OrderNumber = question.OrderNumber,
             Points = question.Points,
-            Options = options.Select(o => new TestQuestionOptionDto
+            Options = options.Select(o => new TestOptionDto
             {
                 Id = o.Id,
                 OptionText = o.OptionText,
@@ -144,7 +144,7 @@ public class TestService : ITestService
                 QuestionText = q.QuestionText,
                 OrderNumber = q.OrderNumber,
                 Points = q.Points,
-                Options = q.Options.Select(o => new TestQuestionOptionDto
+                Options = q.Options.Select(o => new TestOptionDto
                 {
                     Id = o.Id,
                     OptionText = o.OptionText,
@@ -372,7 +372,7 @@ public class TestService : ITestService
                 QuestionText = q.QuestionText,
                 OrderNumber = q.OrderNumber,
                 Points = q.Points,
-                Options = q.Options.Select(o => new TestQuestionOptionDto
+                Options = q.Options.Select(o => new TestOptionDto
                 {
                     Id = o.Id,
                     OptionText = o.OptionText,

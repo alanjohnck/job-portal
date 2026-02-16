@@ -122,13 +122,13 @@ public class MockTestService : IMockTestService
                 Logo = mockTest.Company.Logo,
                 Industry = mockTest.Company.Industry
             },
-            Questions = mockTest.Questions.Select(q => new TestQuestionDto
+            Questions = mockTest.Questions.Select(q => new MockTestQuestionDto
             {
                 Id = q.Id,
                 QuestionText = q.QuestionText,
                 Points = q.Points,
                 OrderNumber = q.OrderNumber,
-                Options = q.Options.Select(o => new TestQuestionOptionDto
+                Options = q.Options.Select(o => new MockTestQuestionOptionDto
                 {
                     Id = o.Id,
                     OptionText = o.OptionText,
