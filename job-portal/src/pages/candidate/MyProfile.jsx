@@ -26,7 +26,11 @@ import {
     createCertification,
     updateCertification,
     deleteCertification,
-    updateSkills
+    updateSkills,
+    getProjects,
+    createProject,
+    updateProject,
+    deleteProject
 } from '../../services/api';
 
 const MyProfile = () => {
@@ -93,18 +97,18 @@ const MyProfile = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             const token = localStorage.getItem('token');
             console.log('========== PROFILE LOAD START ==========');
             console.log('[Auth] Token exists:', !!token);
             console.log('[Auth] Token preview:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
             console.log('[Environment] API URL:', import.meta.env.VITE_API_URL);
             console.log('Loading candidate profile data...');
-            
+
             // Fetch profile data
             const profileResult = await getCandidateProfile();
             console.log('[API] Profile response:', JSON.stringify(profileResult, null, 2));
-            
+
             if (profileResult.success && profileResult.data) {
                 const profile = profileResult.data;
                 const id = profile.candidateId || profile.id;
@@ -112,25 +116,31 @@ const MyProfile = () => {
                 console.log('[Profile] Loaded - ID:', id);
                 console.log('[Profile] Name:', profile.fullName);
                 console.log('[Profile] Email:', profile.email);
-                
+
                 // Fetch work experiences
                 const expResult = await getWorkExperiences();
                 console.log('[API] Work Experiences response:', JSON.stringify(expResult, null, 2));
                 const experiences = expResult.success && expResult.data ? expResult.data : [];
                 console.log('[Profile] Loaded', experiences.length, 'work experiences');
-                
+
                 // Fetch educations
                 const eduResult = await getEducations();
                 console.log('[API] Educations response:', JSON.stringify(eduResult, null, 2));
                 const educations = eduResult.success && eduResult.data ? eduResult.data : [];
                 console.log('[Profile] Loaded', educations.length, 'educations');
-                
+
                 // Fetch certifications
                 const certResult = await getCertifications();
                 console.log('[API] Certifications response:', JSON.stringify(certResult, null, 2));
                 const certifications = certResult.success && certResult.data ? certResult.data : [];
                 console.log('[Profile] Loaded', certifications.length, 'certifications');
-                
+
+                // Fetch projects
+                const projResult = await getProjects();
+                console.log('[API] Projects response:', JSON.stringify(projResult, null, 2));
+                const projects = projResult.success && projResult.data ? projResult.data : [];
+                console.log('[Profile] Loaded', projects.length, 'projects');
+
                 setProfileData(prev => ({
                     ...prev,
                     name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || prev.name,
@@ -167,9 +177,18 @@ const MyProfile = () => {
                         issuingOrganization: cert.issuingOrganization || '',
                         credentialId: cert.credentialId || '',
                         credentialUrl: cert.credentialUrl || ''
-                    })) : prev.certifications
+                    })) : prev.certifications,
+                    projects: projects.length > 0 ? projects.map(proj => ({
+                        id: proj.id,
+                        name: proj.name || '',
+                        desc: proj.description || '',
+                        tags: (proj.technologies && proj.technologies.length > 0) ? proj.technologies.join(', ') : '',
+                        link: proj.projectUrl || '',
+                        github: proj.repoUrl || '',
+                        image: proj.imageUrl || ''
+                    })) : prev.projects
                 }));
-                
+
                 console.log('[Profile] ✅ Data populated successfully!');
             } else {
                 console.warn('[Profile] ⚠️ API returned no data:', profileResult);
@@ -195,12 +214,12 @@ const MyProfile = () => {
         try {
             setSaving(true);
             setError(null);
-            
+
             // Split name into first and last
             const nameParts = profileData.name.trim().split(' ');
             const firstName = nameParts[0] || '';
             const lastName = nameParts.slice(1).join(' ') || '';
-            
+
             // Update basic profile
             await updateCandidateProfile({
                 firstName: firstName,
@@ -212,15 +231,102 @@ const MyProfile = () => {
                 linkedInUrl: profileData.linkedinLink,
                 githubUrl: profileData.githubLink,
                 portfolioUrl: profileData.website,
-                profilePicture: profileData.profilePic,
-                skills: profileData.skills.split(',').map(s => s.trim()).filter(s => s)
+                profilePicture: profileData.profilePic, // Ensure this is not empty or handle safely
+                skills: profileData.skills.length > 0 ? profileData.skills.split(',').map(s => s.trim()).filter(s => s) : []
             });
-            
+
             // Update skills
             const skillsArray = profileData.skills.split(',').map(s => s.trim()).filter(s => s);
             await updateSkills(skillsArray);
-            
-            alert('Profile saved successfully!');
+
+            // SAVE WORK EXPERIENCES
+            for (const exp of profileData.experience) {
+                const [startStr, endStr] = (exp.period || "").split('-').map(s => s.trim());
+                if (!startStr) continue; // Skip if invalid
+
+                const isCurrentJob = (endStr || "").toLowerCase() === 'present';
+                const expData = {
+                    jobTitle: exp.role,
+                    companyName: exp.company,
+                    employmentType: 'Full-time',
+                    location: '',
+                    startDate: new Date(startStr).toISOString(),
+                    endDate: isCurrentJob ? null : (endStr ? new Date(endStr).toISOString() : null),
+                    isCurrentJob,
+                    description: exp.desc,
+                    achievements: exp.achievements || [],
+                    technologies: exp.technologies || []
+                };
+
+                if (typeof exp.id === 'number') {
+                    await createWorkExperience(expData);
+                } else {
+                    await updateWorkExperience(exp.id, expData);
+                }
+            }
+
+            // SAVE EDUCATION
+            for (const edu of profileData.education) {
+                const [startStr, endStr] = (edu.period || "").split('-').map(s => s.trim());
+                if (!startStr) continue;
+
+                const isCurrentlyStudying = (endStr || "").toLowerCase() === 'present';
+                const eduData = {
+                    institutionName: edu.school,
+                    degree: edu.degree,
+                    fieldOfStudy: edu.fieldOfStudy || 'General',
+                    startDate: new Date(startStr).toISOString(),
+                    endDate: isCurrentlyStudying ? null : (endStr ? new Date(endStr).toISOString() : null),
+                    isCurrentlyStudying,
+                    grade: edu.grade || ''
+                };
+
+                if (typeof edu.id === 'number') {
+                    await createEducation(eduData);
+                } else {
+                    await updateEducation(edu.id, eduData);
+                }
+            }
+
+            // SAVE CERTIFICATIONS
+            for (const cert of profileData.certifications || []) {
+                if (!cert.name) continue;
+                const certData = {
+                    name: cert.name,
+                    issuingOrganization: cert.issuingOrganization || 'Unknown',
+                    issueDate: new Date().toISOString(), // Default if not provided
+                    expiryDate: null,
+                    credentialId: cert.credentialId || '',
+                    credentialUrl: cert.credentialUrl || ''
+                };
+
+                if (typeof cert.id === 'number') {
+                    await createCertification(certData);
+                } else {
+                    await updateCertification(cert.id, certData);
+                }
+            }
+
+            // SAVE PROJECTS
+            for (const proj of profileData.projects || []) {
+                if (!proj.name) continue; // Skip empty
+                const projectData = {
+                    name: proj.name,
+                    description: proj.desc,
+                    technologies: proj.tags ? proj.tags.split(',').map(t => t.trim()).filter(t => t) : [],
+                    projectUrl: proj.link,
+                    repoUrl: proj.github,
+                    imageUrl: proj.image
+                };
+
+                if (typeof proj.id === 'number') {
+                    await createProject(projectData);
+                } else {
+                    await updateProject(proj.id, projectData);
+                }
+            }
+
+            alert('Profile saved successfully! Details updated.');
             await loadProfileData(); // Reload to show updated data
         } catch (err) {
             setError(err.message || 'Failed to save profile');
@@ -239,7 +345,7 @@ const MyProfile = () => {
     const handleAddExperience = async () => {
         const newExp = {
             id: Date.now(),
-            company: '',
+            company: '', // ensure default strings
             role: '',
             period: '',
             desc: ''
@@ -253,7 +359,7 @@ const MyProfile = () => {
     const handleUpdateExperience = async (id, field, value) => {
         setProfileData(prev => ({
             ...prev,
-            experience: prev.experience.map(item => 
+            experience: prev.experience.map(item =>
                 item.id === id ? { ...item, [field]: value } : item
             )
         }));
@@ -261,7 +367,6 @@ const MyProfile = () => {
 
     const handleDeleteExperience = async (id) => {
         try {
-            // If it's a new item (temp ID), just remove from state
             if (typeof id === 'number') {
                 setProfileData(prev => ({
                     ...prev,
@@ -269,8 +374,6 @@ const MyProfile = () => {
                 }));
                 return;
             }
-            
-            // Otherwise delete from API
             await deleteWorkExperience(id);
             setProfileData(prev => ({
                 ...prev,
@@ -279,48 +382,6 @@ const MyProfile = () => {
             alert('Experience deleted successfully!');
         } catch (err) {
             alert('Failed to delete experience: ' + err.message);
-        }
-    };
-
-    const handleSaveExperience = async (exp) => {
-        try {
-            // Parse dates from period string
-            const [startStr, endStr] = exp.period.split('-').map(s => s.trim());
-            const isCurrentJob = endStr.toLowerCase() === 'present';
-            
-            const expData = {
-                jobTitle: exp.role,
-                companyName: exp.company,
-                employmentType: 'Full-time',
-                location: '',
-                startDate: new Date(startStr).toISOString(),
-                endDate: isCurrentJob ? null : new Date(endStr).toISOString(),
-                isCurrentJob,
-                description: exp.desc,
-                achievements: exp.achievements || [],
-                technologies: exp.technologies || []
-            };
-            
-            if (typeof exp.id === 'number') {
-                // Create new
-                const result = await createWorkExperience(expData);
-                if (result.success) {
-                    // Update with real ID
-                    setProfileData(prev => ({
-                        ...prev,
-                        experience: prev.experience.map(item => 
-                            item.id === exp.id ? { ...item, id: result.data.id } : item
-                        )
-                    }));
-                    alert('Experience added successfully!');
-                }
-            } else {
-                // Update existing
-                await updateWorkExperience(exp.id, expData);
-                alert('Experience updated successfully!');
-            }
-        } catch (err) {
-            alert('Failed to save experience: ' + err.message);
         }
     };
 
@@ -341,7 +402,7 @@ const MyProfile = () => {
     const handleUpdateEducation = (id, field, value) => {
         setProfileData(prev => ({
             ...prev,
-            education: prev.education.map(item => 
+            education: prev.education.map(item =>
                 item.id === id ? { ...item, [field]: value } : item
             )
         }));
@@ -356,7 +417,6 @@ const MyProfile = () => {
                 }));
                 return;
             }
-            
             await deleteEducation(id);
             setProfileData(prev => ({
                 ...prev,
@@ -365,41 +425,6 @@ const MyProfile = () => {
             alert('Education deleted successfully!');
         } catch (err) {
             alert('Failed to delete education: ' + err.message);
-        }
-    };
-
-    const handleSaveEducation = async (edu) => {
-        try {
-            const [startStr, endStr] = edu.period.split('-').map(s => s.trim());
-            const isCurrentlyStudying = endStr.toLowerCase() === 'present';
-            
-            const eduData = {
-                institutionName: edu.school,
-                degree: edu.degree,
-                fieldOfStudy: edu.fieldOfStudy || '',
-                startDate: new Date(startStr).toISOString(),
-                endDate: isCurrentlyStudying ? null : new Date(endStr).toISOString(),
-                isCurrentlyStudying,
-                grade: edu.grade || ''
-            };
-            
-            if (typeof edu.id === 'number') {
-                const result = await createEducation(eduData);
-                if (result.success) {
-                    setProfileData(prev => ({
-                        ...prev,
-                        education: prev.education.map(item => 
-                            item.id === edu.id ? { ...item, id: result.data.id } : item
-                        )
-                    }));
-                    alert('Education added successfully!');
-                }
-            } else {
-                await updateEducation(edu.id, eduData);
-                alert('Education updated successfully!');
-            }
-        } catch (err) {
-            alert('Failed to save education: ' + err.message);
         }
     };
 
@@ -418,7 +443,7 @@ const MyProfile = () => {
     const handleUpdateCertification = (id, field, value) => {
         setProfileData(prev => ({
             ...prev,
-            certifications: prev.certifications.map(item => 
+            certifications: prev.certifications.map(item =>
                 item.id === id ? { ...item, [field]: value } : item
             )
         }));
@@ -433,7 +458,6 @@ const MyProfile = () => {
                 }));
                 return;
             }
-            
             await deleteCertification(id);
             setProfileData(prev => ({
                 ...prev,
@@ -445,38 +469,27 @@ const MyProfile = () => {
         }
     };
 
-    const handleSaveCertification = async (cert) => {
+    const handleDeleteProject = async (id) => {
         try {
-            const certData = {
-                name: cert.name,
-                issuingOrganization: cert.issuingOrganization || '',
-                issueDate: cert.issueDate ? new Date(cert.issueDate).toISOString() : new Date().toISOString(),
-                expiryDate: cert.expiryDate ? new Date(cert.expiryDate).toISOString() : null,
-                credentialId: cert.credentialId || '',
-                credentialUrl: cert.credentialUrl || ''
-            };
-            
-            if (typeof cert.id === 'number') {
-                const result = await createCertification(certData);
-                if (result.success) {
-                    setProfileData(prev => ({
-                        ...prev,
-                        certifications: prev.certifications.map(item => 
-                            item.id === cert.id ? { ...item, id: result.data.id } : item
-                        )
-                    }));
-                    alert('Certification added successfully!');
-                }
-            } else {
-                await updateCertification(cert.id, certData);
-                alert('Certification updated successfully!');
+            if (typeof id === 'number') {
+                setProfileData(prev => ({
+                    ...prev,
+                    projects: prev.projects.filter(item => item.id !== id)
+                }));
+                return;
             }
+            await deleteProject(id);
+            setProfileData(prev => ({
+                ...prev,
+                projects: prev.projects.filter(item => item.id !== id)
+            }));
+            alert('Project deleted successfully!');
         } catch (err) {
-            alert('Failed to save certification: ' + err.message);
+            alert('Failed to delete project: ' + err.message);
         }
     };
 
-    // Correct Item Handlers
+    // Generic Items (Projects, Hackathons)
     const addItem = (section, emptyObj) => {
         setProfileData(prev => ({
             ...prev,
@@ -503,24 +516,8 @@ const MyProfile = () => {
             <Header />
 
             {loading && (
-                <div style={{ 
-                    position: 'fixed', 
-                    top: 0, 
-                    left: 0, 
-                    right: 0, 
-                    bottom: 0, 
-                    backgroundColor: 'rgba(0,0,0,0.5)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    zIndex: 9999 
-                }}>
-                    <div style={{ 
-                        backgroundColor: 'white', 
-                        padding: '30px', 
-                        borderRadius: '10px', 
-                        textAlign: 'center' 
-                    }}>
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+                    <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '10px', textAlign: 'center' }}>
                         <div style={{ fontSize: '18px', marginBottom: '10px' }}>Loading Profile...</div>
                         <div style={{ fontSize: '40px', animation: 'spin 1s linear infinite' }}>⏳</div>
                     </div>
@@ -528,30 +525,12 @@ const MyProfile = () => {
             )}
 
             {error && (
-                <div style={{ 
-                    backgroundColor: '#fee', 
-                    color: '#c33', 
-                    padding: '15px', 
-                    margin: '20px', 
-                    borderRadius: '8px',
-                    border: '1px solid #fcc'
-                }}>
+                <div style={{ backgroundColor: '#fee', color: '#c33', padding: '15px', margin: '20px', borderRadius: '8px', border: '1px solid #fcc' }}>
                     <strong>Error:</strong> {error}
                 </div>
             )}
 
-            {candidateId && !loading && (
-                <div style={{ 
-                    backgroundColor: '#e0f7fa', 
-                    color: '#006064', 
-                    padding: '8px 20px', 
-                    textAlign: 'center',
-                    fontSize: '13px',
-                    fontWeight: '500'
-                }}>
-                    Candidate ID: {candidateId}
-                </div>
-            )}
+            {/* Candidate ID Display REMOVED */}
 
             <div className="builder-toolbar no-print">
                 <div className="container">
@@ -564,13 +543,13 @@ const MyProfile = () => {
                                 <button className={`mode-btn ${editMode ? 'active' : ''}`} onClick={() => setEditMode(true)}>
                                     <FaEdit /> Build Form
                                 </button>
-                                <button className={`mode-btn ${!editMode ? 'active' : ''}`} onClick={() => setEditMode(false)}>
-                                    <FaEye /> Live Preview
+                                <button className="mode-btn" onClick={() => window.open(`/portfolio/${candidateId}`, '_blank')}>
+                                    <FaLink /> Live Preview (New Tab)
                                 </button>
                             </div>
                         </div>
                         <div className="spacer"></div>
-                        <button className="download-btn-premium" onClick={handleSaveProfile} disabled={saving} style={{marginRight: '10px', backgroundColor: '#10b981'}}>
+                        <button className="download-btn-premium" onClick={handleSaveProfile} disabled={saving} style={{ marginRight: '10px', backgroundColor: '#10b981' }}>
                             <FaSave /> {saving ? 'Saving...' : 'Save Profile'}
                         </button>
                         <button className="download-btn-premium" onClick={handleDownloadPDF}>
@@ -738,7 +717,7 @@ const MyProfile = () => {
                                         <div key={proj.id} className="form-item-card">
                                             <div className="item-action-bar">
                                                 <span className="item-label">Project Entry</span>
-                                                <FaTrash className="item-delete-icon" onClick={() => removeItem('projects', proj.id)} />
+                                                <FaTrash className="item-delete-icon" onClick={() => handleDeleteProject(proj.id)} />
                                             </div>
                                             <div className="item-inputs">
                                                 <input className="full-style-input" placeholder="Project Name" value={proj.name} onChange={(e) => updateItem('projects', proj.id, 'name', e.target.value)} />
@@ -853,8 +832,8 @@ const MyProfile = () => {
                                                         {proj.tags.split(',').map((t, i) => t.trim() && <span key={i}>{t.trim()}</span>)}
                                                     </div>
                                                     <div className="p-proj-links">
-                                                        <span><FaGlobe /> Website</span>
-                                                        <span><FaGithub /> Source Code</span>
+                                                        {proj.link && <span onClick={() => window.open(proj.link, '_blank')}><FaGlobe /> Website</span>}
+                                                        {proj.github && <span onClick={() => window.open(proj.github, '_blank')}><FaGithub /> Source Code</span>}
                                                     </div>
                                                 </div>
                                             </div>

@@ -99,16 +99,23 @@ public class AdminService : IAdminService
             .OrderByDescending(u => u.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(u => new
+            {
+                User = u,
+                CandidateName = _context.Candidates.Where(c => c.UserId == u.Id).Select(c => c.FirstName + " " + c.LastName).FirstOrDefault(),
+                CompanyName = _context.Companies.Where(c => c.UserId == u.Id).Select(c => c.CompanyName).FirstOrDefault()
+            })
             .ToListAsync();
 
-        var dtos = users.Select(u => new UserDto
+        var dtos = users.Select(x => new UserDto
         {
-            Id = u.Id,
-            Email = u.Email,
-            Role = u.Role,
-            IsActive = u.IsActive,
-            CreatedAt = u.CreatedAt,
-            LastLoginAt = u.LastLoginAt
+            Id = x.User.Id,
+            Email = x.User.Email,
+            FullName = x.User.Role == "Candidate" ? x.CandidateName : (x.User.Role == "Company" ? x.CompanyName : "Admin"),
+            Role = x.User.Role,
+            IsActive = x.User.IsActive,
+            CreatedAt = x.User.CreatedAt,
+            LastLoginAt = x.User.LastLoginAt
         }).ToList();
 
         return ApiResponse<PaginationResponse<UserDto>>.SuccessResponse(new PaginationResponse<UserDto>

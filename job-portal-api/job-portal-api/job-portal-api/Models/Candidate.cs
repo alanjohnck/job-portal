@@ -44,4 +44,5 @@ public class Candidate
     public ICollection<WorkExperience> WorkExperiences { get; set; } = new List<WorkExperience>();
     public ICollection<Education> Educations { get; set; } = new List<Education>();
     public ICollection<Certification> Certifications { get; set; } = new List<Certification>();
+    public ICollection<Project> Projects { get; set; } = new List<Project>();
 }

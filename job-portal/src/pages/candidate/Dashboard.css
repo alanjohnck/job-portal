@@ -347,6 +347,15 @@
     gap: 15px;
 }
 
+.notifications-list .empty-state {
+    background: white;
+    border: 1px solid #eef2f6;
+    border-radius: 12px;
+    padding: 20px;
+    color: #6b7280;
+    text-align: center;
+}
+
 .notif-card {
     display: flex;
     gap: 15px;
@@ -573,4 +582,361 @@
 .toggle-row input[type="checkbox"] {
     width: 40px;
     height: 20px;
+}
+
+/* Assessment Table */
+.assessment-section {
+    margin-bottom: 40px;
+}
+
+.table-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #eef2f6;
+    overflow-x: auto;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.custom-table th,
+.custom-table td {
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.custom-table th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.custom-table tr:last-child td {
+    border-bottom: none;
+}
+
+.custom-table td {
+    font-size: 14px;
+    color: #334155;
+}
+
+.text-muted {
+    color: #94a3b8;
+}
+
+.small {
+    font-size: 12px;
+}
+
+.fw-bold {
+    font-weight: 600;
+}
+
+.text-success {
+    color: #16a34a;
+}
+
+.text-danger {
+    color: #dc2626;
+}
+
+.btn-primary-sm {
+    background: var(--primary-violet);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary-sm:hover {
+    background: #6d28d9;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: default;
+}
+
+/* Enhanced Mock Test UI */
+.mock-test-container {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid #eef2f6;
+    max-width: 700px;
+    margin: 0 auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.start-screen {
+    text-align: center;
+    padding: 50px 30px;
+}
+
+.test-header {
+    margin-bottom: 30px;
+}
+
+.test-header h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.badge-info {
+    background: #e0f2fe;
+    color: #0284c7;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.test-instructions {
+    text-align: left;
+    background: #f8fafc;
+    padding: 24px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.test-instructions h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.test-instructions ul {
+    padding-left: 20px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.test-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.primary-btn {
+    background: var(--primary-violet);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.secondary-btn {
+    background: white;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Test Runner UI */
+.test-header-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.test-header-compact h4 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.timer-placeholder {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #f59e0b;
+    font-weight: 600;
+    background: #fffbeb;
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+.progress-bar-container {
+    background: #e2e8f0;
+    height: 6px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: var(--primary-violet);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.test-progress-text {
+    text-align: right;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 20px;
+}
+
+.options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.option-item:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.option-item.selected {
+    border-color: var(--primary-violet);
+    background: #f3e8ff;
+}
+
+/* Timer */
+.timer-placeholder.urgent {
+    background: #fef2f2;
+    color: #dc2626;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Radio Button Custom */
+.radio-circle {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.radio-circle.active {
+    border-color: var(--primary-violet);
+}
+
+.inner-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--primary-violet);
+    border-radius: 50%;
+}
+
+.option-text {
+    font-size: 15px;
+    color: #334155;
+    font-weight: 500;
+}
+
+.option-item.selected .option-text {
+    color: var(--primary-violet);
+    font-weight: 600;
+}
+
+.test-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    gap: 16px;
+}
+
+.error-message {
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    border: 1px solid #fecaca;
+}
+
+.mb-4 {
+    margin-bottom: 16px;
+}
+
+.prev-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.prev-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.submit-btn {
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.score-summary {
+    font-size: 18px;
+    background: #f0fdf4;
+    padding: 16px;
+    border-radius: 8px;
+    margin: 20px 0;
+    color: #166534;
 }

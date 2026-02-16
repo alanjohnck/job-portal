@@ -30,16 +30,16 @@ const CompanyDashboard = () => {
                 getCompanyProfile()
             ]);
 
-            if (dashboardRes.success) {
-                setStats(dashboardRes.data);
+            if (dashboardRes) {
+                setStats(dashboardRes);
             }
 
-            if (jobsRes.success && jobsRes.data?.items) {
-                setRecentJobs(jobsRes.data.items);
+            if (jobsRes && jobsRes.items) {
+                setRecentJobs(jobsRes.items);
             }
 
-            if (profileRes.success) {
-                setCompanyName(profileRes.data.companyName);
+            if (profileRes) {
+                setCompanyName(profileRes.companyName);
             }
         } catch (err) {
             console.error('Error fetching dashboard data:', err);
@@ -93,7 +93,7 @@ const CompanyDashboard = () => {
                     <main className="comp-main-content">
                         <section className="overview-section">
                             {error && <div className="error-message">{error}</div>}
-                            
+
                             <div className="welcome-box">
                                 <h1>Hello, {companyName}</h1>
                                 <p>Here is your daily activities and applications</p>
@@ -159,7 +159,7 @@ const CompanyDashboard = () => {
                                                         </td>
                                                         <td>
                                                             <div className="actions-cell">
-                                                                <button 
+                                                                <button
                                                                     className="view-apps-btn"
                                                                     onClick={() => handleViewApplications(job.id)}
                                                                 >

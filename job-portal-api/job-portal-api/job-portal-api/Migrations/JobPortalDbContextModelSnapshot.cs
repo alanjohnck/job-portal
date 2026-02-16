@@ -555,6 +555,100 @@ namespace JobPortalApi.Migrations
                     b.ToTable("MockTests");
                 });
 
+            modelBuilder.Entity("JobPortalApi.Models.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("RelatedEntityId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RelatedEntityType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsRead");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("JobPortalApi.Models.Project", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CandidateId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ProjectUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("RepoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Technologies")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateId");
+
+                    b.ToTable("Projects");
+                });
+
             modelBuilder.Entity("JobPortalApi.Models.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -677,6 +771,10 @@ namespace JobPortalApi.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -699,6 +797,93 @@ namespace JobPortalApi.Migrations
                     b.ToTable("SupportTickets");
                 });
 
+            modelBuilder.Entity("JobPortalApi.Models.TestAnswer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AnsweredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SelectedOptionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TestQuestionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TestResultId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SelectedOptionId");
+
+                    b.HasIndex("TestQuestionId");
+
+                    b.HasIndex("TestResultId");
+
+                    b.ToTable("TestAnswers");
+                });
+
+            modelBuilder.Entity("JobPortalApi.Models.TestQuestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("MockTestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OrderNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<string>("QuestionText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MockTestId");
+
+                    b.ToTable("TestQuestions");
+                });
+
+            modelBuilder.Entity("JobPortalApi.Models.TestQuestionOption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("OptionText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderNumber")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TestQuestionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TestQuestionId");
+
+                    b.ToTable("TestQuestionOptions");
+                });
+
             modelBuilder.Entity("JobPortalApi.Models.TestResult", b =>
                 {
                     b.Property<Guid>("Id")
@@ -708,7 +893,7 @@ namespace JobPortalApi.Migrations
                     b.Property<Guid>("CandidateId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CompletedAt")
+                    b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("HasPassed")
@@ -721,6 +906,16 @@ namespace JobPortalApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TotalPoints")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -943,6 +1138,28 @@ namespace JobPortalApi.Migrations
                     b.Navigation("Job");
                 });
 
+            modelBuilder.Entity("JobPortalApi.Models.Notification", b =>
+                {
+                    b.HasOne("JobPortalApi.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("JobPortalApi.Models.Project", b =>
+                {
+                    b.HasOne("JobPortalApi.Models.Candidate", "Candidate")
+                        .WithMany("Projects")
+                        .HasForeignKey("CandidateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Candidate");
+                });
+
             modelBuilder.Entity("JobPortalApi.Models.RefreshToken", b =>
                 {
                     b.HasOne("JobPortalApi.Models.User", "User")
@@ -1003,6 +1220,55 @@ namespace JobPortalApi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("JobPortalApi.Models.TestAnswer", b =>
+                {
+                    b.HasOne("JobPortalApi.Models.TestQuestionOption", "SelectedOption")
+                        .WithMany()
+                        .HasForeignKey("SelectedOptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JobPortalApi.Models.TestQuestion", "TestQuestion")
+                        .WithMany("Answers")
+                        .HasForeignKey("TestQuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JobPortalApi.Models.TestResult", "TestResult")
+                        .WithMany("Answers")
+                        .HasForeignKey("TestResultId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SelectedOption");
+
+                    b.Navigation("TestQuestion");
+
+                    b.Navigation("TestResult");
+                });
+
+            modelBuilder.Entity("JobPortalApi.Models.TestQuestion", b =>
+                {
+                    b.HasOne("JobPortalApi.Models.MockTest", "MockTest")
+                        .WithMany("Questions")
+                        .HasForeignKey("MockTestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MockTest");
+                });
+
+            modelBuilder.Entity("JobPortalApi.Models.TestQuestionOption", b =>
+                {
+                    b.HasOne("JobPortalApi.Models.TestQuestion", "TestQuestion")
+                        .WithMany("Options")
+                        .HasForeignKey("TestQuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TestQuestion");
+                });
+
             modelBuilder.Entity("JobPortalApi.Models.TestResult", b =>
                 {
                     b.HasOne("JobPortalApi.Models.Candidate", "Candidate")
@@ -1041,6 +1307,8 @@ namespace JobPortalApi.Migrations
 
                     b.Navigation("Educations");
 
+                    b.Navigation("Projects");
+
                     b.Navigation("SavedJobs");
 
                     b.Navigation("TestResults");
@@ -1068,7 +1336,21 @@ namespace JobPortalApi.Migrations
 
             modelBuilder.Entity("JobPortalApi.Models.MockTest", b =>
                 {
+                    b.Navigation("Questions");
+
                     b.Navigation("TestResults");
+                });
+
+            modelBuilder.Entity("JobPortalApi.Models.TestQuestion", b =>
+                {
+                    b.Navigation("Answers");
+
+                    b.Navigation("Options");
+                });
+
+            modelBuilder.Entity("JobPortalApi.Models.TestResult", b =>
+                {
+                    b.Navigation("Answers");
                 });
 
             modelBuilder.Entity("JobPortalApi.Models.User", b =>

@@ -1,9 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaBriefcase, FaPhoneAlt, FaBell, FaUserCircle, FaSearch, FaMapMarkerAlt } from 'react-icons/fa';
 import './Header.css';
 
-const Header = () => {
+const Header = ({ onSearch }) => {
+  const [keyword, setKeyword] = useState('');
+  const [location, setLocation] = useState('');
+  const navigate = useNavigate();
+
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch({ keyword, location });
+    } else {
+      navigate(`/candidate/find-jobs?keyword=${encodeURIComponent(keyword)}&location=${encodeURIComponent(location)}`);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
   return (
     <header className="main-header">
       {/* Top Utility Bar */}
@@ -35,14 +52,26 @@ const Header = () => {
             <div className="header-search">
               <div className="search-group">
                 <FaSearch className="search-icon" />
-                <input type="text" placeholder="Job title, keyword..." />
+                <input
+                  type="text"
+                  placeholder="Job title, keyword..."
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
               </div>
               <div className="search-divider"></div>
               <div className="search-group">
                 <FaMapMarkerAlt className="search-icon" />
-                <input type="text" placeholder="India" />
+                <input
+                  type="text"
+                  placeholder="India"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
               </div>
-              <button className="header-search-btn">Search</button>
+              <button className="header-search-btn" onClick={handleSearch}>Search</button>
             </div>
           </div>
 

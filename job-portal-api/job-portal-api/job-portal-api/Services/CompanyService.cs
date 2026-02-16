@@ -120,12 +120,15 @@ public class CompanyService : ICompanyService
             .Include(a => a.Job)
             .CountAsync(a => a.Job.CompanyId == company.Id && a.AppliedAt >= DateTime.UtcNow.Date);
 
+        var totalMockTests = await _context.MockTests.CountAsync(m => m.CompanyId == company.Id);
+
         var stats = new CompanyDashboardStats
         {
             TotalJobs = totalJobs,
             ActiveJobs = activeJobs,
             TotalApplications = totalApplications,
             NewApplicationsToday = newApplicationsToday,
+            TotalMockTests = totalMockTests,
             ProfileViews = 0 // Mock value or implement tracking logic
         };
 
@@ -292,6 +295,7 @@ public class CompanyService : ICompanyService
 
         var job = await _context.Jobs
             .Include(j => j.Applications)
+            .Include(j => j.MockTests) // Include Mock Tests
             .Include(j => j.Company) // Include company to populate fully
             .FirstOrDefaultAsync(j => j.Id == jobId);
             
@@ -334,7 +338,27 @@ public class CompanyService : ICompanyService
                 Name = job.Company.CompanyName,
                 Logo = job.Company.Logo,
                 Industry = job.Company.Industry
-            }
+            },
+            MockTests = job.MockTests.Select(m => new MockTestDto
+            {
+                Id = m.Id,
+                JobId = m.JobId,
+                Title = m.Title,
+                Description = m.Description,
+                ScheduledDate = m.ScheduledDate,
+                StartTime = m.StartTime,
+                DurationMinutes = m.DurationMinutes,
+                PassingScore = m.PassingScore,
+                Status = m.Status,
+                TotalApplicants = m.TotalApplicants,
+                Company = new CompanyBasicInfo
+                {
+                    Id = job.Company.Id,
+                    Name = job.Company.CompanyName,
+                    Logo = job.Company.Logo,
+                    Industry = job.Company.Industry
+                }
+            }).ToList()
         };
 
         return ApiResponse<JobDto>.SuccessResponse(jobDto);
@@ -417,6 +441,7 @@ public class CompanyService : ICompanyService
 
         var application = await _context.JobApplications
             .Include(a => a.Job)
+            .Include(a => a.Candidate)
             .FirstOrDefaultAsync(a => a.Id == applicationId);
 
         if (application == null)
@@ -425,6 +450,7 @@ public class CompanyService : ICompanyService
         if (application.Job.CompanyId != company.Id)
             return ApiResponse<object>.ErrorResponse("Access denied", "FORBIDDEN");
 
+        var previousStatus = application.Status;
         application.Status = request.Status;
         if (!string.IsNullOrEmpty(request.KanbanColumn))
         {
@@ -434,6 +460,19 @@ public class CompanyService : ICompanyService
 
         _context.JobApplications.Update(application);
         await _context.SaveChangesAsync();
+
+        if (!string.Equals(previousStatus, application.Status, StringComparison.OrdinalIgnoreCase))
+        {
+            var title = "Application status updated";
+            var message = $"Your application for {application.Job.Title} is now {application.Status}.";
+            await _notificationService.CreateNotificationAsync(
+                application.Candidate.UserId,
+                title,
+                message,
+                "ApplicationStatus",
+                application.Id.ToString(),
+                "Application");
+        }
 
         return ApiResponse<object>.SuccessResponse(null, "Application status updated successfully");
     }
@@ -574,7 +613,8 @@ public class CompanyService : ICompanyService
                 ProfilePicture = s.Candidate.ProfilePicture,
                 CurrentJobTitle = s.Candidate.CurrentJobTitle,
                 ExperienceYears = s.Candidate.ExperienceYears,
-                Skills = s.Candidate.Skills
+                Skills = s.Candidate.Skills,
+                ResumeUrl = s.Candidate.ResumeUrl
             }
         }).ToList();
 

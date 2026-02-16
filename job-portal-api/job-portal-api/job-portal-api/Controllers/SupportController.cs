@@ -7,7 +7,7 @@ using JobPortalApi.Services;
 namespace JobPortalApi.Controllers;
 
 [ApiController]
-[Route("api/v1/support-tickets")]
+[Route("api/v1/support")]
 [Authorize]
 public class SupportController : ControllerBase
 {
@@ -27,15 +27,15 @@ public class SupportController : ControllerBase
         return Guid.Parse(userIdClaim.Value);
     }
 
-    [HttpPost]
+    [HttpPost("tickets")]
     public async Task<IActionResult> CreateTicket([FromBody] CreateSupportTicketRequest request)
     {
         var userId = GetUserId();
         var result = await _supportService.CreateTicketAsync(userId, request);
-        return CreatedAtAction(nameof(GetMyTickets), new { id = result.Data?.Id }, result);
+        return Ok(result);
     }
 
-    [HttpGet] // Returns my tickets
+    [HttpGet("my-tickets")]
     public async Task<IActionResult> GetMyTickets([FromQuery] string? status)
     {
         var userId = GetUserId();

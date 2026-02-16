@@ -25,5 +25,6 @@ public class CompanyDashboardStats
     public int ActiveJobs { get; set; }
     public int TotalApplications { get; set; }
     public int NewApplicationsToday { get; set; }
+    public int TotalMockTests { get; set; }
     public int ProfileViews { get; set; } // Mock data for now
 }

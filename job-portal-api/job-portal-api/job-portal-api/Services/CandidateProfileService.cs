@@ -38,6 +38,12 @@ public interface ICandidateProfileService
     
     // Skills
     Task<ApiResponse<string[]>> UpdateSkillsAsync(Guid userId, string[] skills);
+
+    // Projects
+    Task<ApiResponse<List<ProjectDto>>> GetProjectsAsync(Guid userId);
+    Task<ApiResponse<ProjectDto>> CreateProjectAsync(Guid userId, CreateProjectRequest request);
+    Task<ApiResponse<ProjectDto>> UpdateProjectAsync(Guid userId, Guid projectId, UpdateProjectRequest request);
+    Task<ApiResponse<object>> DeleteProjectAsync(Guid userId, Guid projectId);
 }
 
 public class CandidateProfileService : ICandidateProfileService
@@ -56,6 +62,7 @@ public class CandidateProfileService : ICandidateProfileService
             .Include(c => c.WorkExperiences)
             .Include(c => c.Educations)
             .Include(c => c.Certifications)
+            .Include(c => c.Projects)
             .FirstOrDefaultAsync(c => c.UserId == userId);
     }
 
@@ -90,7 +97,8 @@ public class CandidateProfileService : ICandidateProfileService
             UpdatedAt = candidate.UpdatedAt,
             WorkExperiences = candidate.WorkExperiences.Select(MapToWorkExperienceDto).OrderByDescending(we => we.StartDate).ToList(),
             Educations = candidate.Educations.Select(MapToEducationDto).OrderByDescending(e => e.StartDate).ToList(),
-            Certifications = candidate.Certifications.Select(MapToCertificationDto).OrderByDescending(c => c.IssueDate).ToList()
+            Certifications = candidate.Certifications.Select(MapToCertificationDto).OrderByDescending(c => c.IssueDate).ToList(),
+            Projects = candidate.Projects.Select(MapToProjectDto).ToList()
         };
     }
 
@@ -142,6 +150,20 @@ public class CandidateProfileService : ICandidateProfileService
         };
     }
 
+    private ProjectDto MapToProjectDto(Project project)
+    {
+        return new ProjectDto
+        {
+            Id = project.Id,
+            Name = project.Name,
+            Description = project.Description,
+            Technologies = project.Technologies,
+            ProjectUrl = project.ProjectUrl,
+            RepoUrl = project.RepoUrl,
+            ImageUrl = project.ImageUrl
+        };
+    }
+
     // Profile Methods
     public async Task<ApiResponse<CandidateProfileDto>> GetProfileAsync(Guid userId)
     {
@@ -187,6 +209,7 @@ public class CandidateProfileService : ICandidateProfileService
             .Include(c => c.WorkExperiences)
             .Include(c => c.Educations)
             .Include(c => c.Certifications)
+            .Include(c => c.Projects)
             .FirstOrDefaultAsync(c => c.Id == candidateId);
 
         if (candidate == null)
@@ -553,5 +576,93 @@ public class CandidateProfileService : ICandidateProfileService
         await _context.SaveChangesAsync();
 
         return ApiResponse<string[]>.SuccessResponse(skills, "Skills updated successfully");
+    }
+
+    // Projects
+    public async Task<ApiResponse<List<ProjectDto>>> GetProjectsAsync(Guid userId)
+    {
+        var candidate = await _context.Candidates
+            .Include(c => c.Projects)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+
+        if (candidate == null)
+            return ApiResponse<List<ProjectDto>>.ErrorResponse("Candidate not found", "NOT_FOUND");
+
+        var projects = candidate.Projects
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(MapToProjectDto)
+            .ToList();
+
+        return ApiResponse<List<ProjectDto>>.SuccessResponse(projects);
+    }
+
+    public async Task<ApiResponse<ProjectDto>> CreateProjectAsync(Guid userId, CreateProjectRequest request)
+    {
+        var candidate = await _context.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (candidate == null)
+            return ApiResponse<ProjectDto>.ErrorResponse("Candidate not found", "NOT_FOUND");
+
+        var project = new Project
+        {
+            Id = Guid.NewGuid(),
+            CandidateId = candidate.Id,
+            Name = request.Name,
+            Description = request.Description,
+            Technologies = request.Technologies,
+            ProjectUrl = request.ProjectUrl,
+            RepoUrl = request.RepoUrl,
+            ImageUrl = request.ImageUrl,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.Projects.Add(project);
+        await _context.SaveChangesAsync();
+
+        return ApiResponse<ProjectDto>.SuccessResponse(MapToProjectDto(project), "Project added successfully");
+    }
+
+    public async Task<ApiResponse<ProjectDto>> UpdateProjectAsync(Guid userId, Guid projectId, UpdateProjectRequest request)
+    {
+        var candidate = await _context.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (candidate == null)
+            return ApiResponse<ProjectDto>.ErrorResponse("Candidate not found", "NOT_FOUND");
+
+        var project = await _context.Projects
+            .FirstOrDefaultAsync(p => p.Id == projectId && p.CandidateId == candidate.Id);
+
+        if (project == null)
+            return ApiResponse<ProjectDto>.ErrorResponse("Project not found", "NOT_FOUND");
+
+        project.Name = request.Name;
+        project.Description = request.Description;
+        project.Technologies = request.Technologies;
+        project.ProjectUrl = request.ProjectUrl;
+        project.RepoUrl = request.RepoUrl;
+        project.ImageUrl = request.ImageUrl;
+        project.UpdatedAt = DateTime.UtcNow;
+
+        _context.Projects.Update(project);
+        await _context.SaveChangesAsync();
+
+        return ApiResponse<ProjectDto>.SuccessResponse(MapToProjectDto(project), "Project updated successfully");
+    }
+
+    public async Task<ApiResponse<object>> DeleteProjectAsync(Guid userId, Guid projectId)
+    {
+        var candidate = await _context.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (candidate == null)
+            return ApiResponse<object>.ErrorResponse("Candidate not found", "NOT_FOUND");
+
+        var project = await _context.Projects
+            .FirstOrDefaultAsync(p => p.Id == projectId && p.CandidateId == candidate.Id);
+
+        if (project == null)
+            return ApiResponse<object>.ErrorResponse("Project not found", "NOT_FOUND");
+
+        _context.Projects.Remove(project);
+        await _context.SaveChangesAsync();
+
+        return ApiResponse<object>.SuccessResponse(null, "Project deleted successfully");
     }
 }

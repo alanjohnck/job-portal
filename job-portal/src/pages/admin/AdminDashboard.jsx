@@ -1,22 +1,151 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import { FaWallet, FaUsers, FaBuilding, FaBriefcase, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { getAdminDashboardStats, getAdminRecentActivity } from '../../services/api';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
-    const stats = [
-        { label: 'Total Revenue', value: '$128,430', icon: <FaWallet />, growth: '+12.5%', color: '#7c3aed' },
-        { label: 'Total Users', value: '14,200', icon: <FaUsers />, growth: '+5.2%', color: '#3b82f6' },
-        { label: 'Companies', value: '840', icon: <FaBuilding />, growth: '+2.1%', color: '#10b981' },
-        { label: 'Total Jobs', value: '3,240', icon: <FaBriefcase />, growth: '-1.4%', color: '#f59e0b' },
-    ];
+    const [stats, setStats] = useState(null);
+    const [recentActivity, setRecentActivity] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const recentActivity = [
-        { type: 'user', name: 'Devon Lane', action: 'Joined as Candidate', time: '2 mins ago' },
-        { type: 'company', name: 'Nalashaa Solutions', action: 'Posted a new job', time: '15 mins ago' },
-        { type: 'support', name: 'Guy Hawkins', action: 'Raised a ticket', time: '1 hour ago' },
-        { type: 'payment', name: 'Microsoft', action: 'Renewed Platinum Plan', time: '3 hours ago' },
-    ];
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        try {
+            setLoading(true);
+            const [statsData, activityData] = await Promise.all([
+                getAdminDashboardStats(),
+                getAdminRecentActivity(10)
+            ]);
+            setStats(statsData);
+            setRecentActivity(activityData);
+            setError(null);
+        } catch (err) {
+            console.error('Failed to fetch dashboard data:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    };
+
+    const formatNumber = (value) => {
+        return new Intl.NumberFormat('en-US').format(value);
+    };
+
+    const getStatIcon = (label) => {
+        switch (label.toLowerCase()) {
+            case 'total revenue': return <FaWallet />;
+            case 'total users': return <FaUsers />;
+            case 'companies': return <FaBuilding />;
+            case 'total jobs': return <FaBriefcase />;
+            default: return <FaBriefcase />;
+        }
+    };
+
+    const getStatColor = (label) => {
+        switch (label.toLowerCase()) {
+            case 'total revenue': return '#7c3aed';
+            case 'total users': return '#3b82f6';
+            case 'companies': return '#10b981';
+            case 'total jobs': return '#f59e0b';
+            default: return '#6b7280';
+        }
+    };
+
+    const getActivityType = (action) => {
+        if (action.includes('Joined')) return 'user';
+        if (action.includes('Posted') || action.includes('job')) return 'company';
+        if (action.includes('ticket') || action.includes('Raised')) return 'support';
+        if (action.includes('Renewed') || action.includes('payment')) return 'payment';
+        return 'user';
+    };
+
+    const formatTimeAgo = (dateString) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+
+        if (seconds < 60) return `${seconds} seconds ago`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        const days = Math.floor(hours / 24);
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    };
+
+    if (loading) {
+        return (
+            <div className="admin-layout">
+                <AdminSidebar />
+                <main className="admin-main">
+                    <div style={{ padding: '2rem', textAlign: 'center' }}>
+                        <p>Loading dashboard...</p>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="admin-layout">
+                <AdminSidebar />
+                <main className="admin-main">
+                    <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>
+                        <p>Error loading dashboard: {error}</p>
+                        <button onClick={fetchDashboardData} style={{ marginTop: '1rem', padding: '0.5rem 1rem', cursor: 'pointer' }}>
+                            Retry
+                        </button>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    const statsArray = stats ? [
+        {
+            label: 'Total Revenue',
+            value: formatCurrency(stats.totalRevenue || 0),
+            icon: getStatIcon('Total Revenue'),
+            growth: stats.revenueGrowth ? `${stats.revenueGrowth > 0 ? '+' : ''}${stats.revenueGrowth.toFixed(1)}%` : '0%',
+            color: getStatColor('Total Revenue')
+        },
+        {
+            label: 'Total Users',
+            value: formatNumber(stats.totalUsers || 0),
+            icon: getStatIcon('Total Users'),
+            growth: stats.userGrowth ? `${stats.userGrowth > 0 ? '+' : ''}${stats.userGrowth.toFixed(1)}%` : '0%',
+            color: getStatColor('Total Users')
+        },
+        {
+            label: 'Companies',
+            value: formatNumber(stats.totalCompanies || 0),
+            icon: getStatIcon('Companies'),
+            growth: stats.companyGrowth ? `${stats.companyGrowth > 0 ? '+' : ''}${stats.companyGrowth.toFixed(1)}%` : '0%',
+            color: getStatColor('Companies')
+        },
+        {
+            label: 'Total Jobs',
+            value: formatNumber(stats.totalJobs || 0),
+            icon: getStatIcon('Total Jobs'),
+            growth: stats.jobGrowth ? `${stats.jobGrowth > 0 ? '+' : ''}${stats.jobGrowth.toFixed(1)}%` : '0%',
+            color: getStatColor('Total Jobs')
+        },
+    ] : [];
 
     return (
         <div className="admin-layout">
@@ -28,13 +157,13 @@ const AdminDashboard = () => {
                         <p>Welcome back, Administrator. Here's what's happening today.</p>
                     </div>
                     <div className="admin-profile-quick">
-                        <span>John Admin</span>
+                        <span>Admin</span>
                         <div className="admin-avatar">A</div>
                     </div>
                 </header>
 
                 <div className="admin-stats-grid">
-                    {stats.map((stat, idx) => (
+                    {statsArray.map((stat, idx) => (
                         <div key={idx} className="admin-stat-card">
                             <div className="stat-icon-wrap" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
                                 {stat.icon}
@@ -81,15 +210,17 @@ const AdminDashboard = () => {
                             <h3>Recent Activity</h3>
                         </div>
                         <div className="activity-list">
-                            {recentActivity.map((act, i) => (
+                            {recentActivity.length > 0 ? recentActivity.map((act, i) => (
                                 <div key={i} className="activity-item">
-                                    <div className={`activity-icon ${act.type}`}></div>
+                                    <div className={`activity-icon ${getActivityType(act.action)}`}></div>
                                     <div className="activity-info">
-                                        <p><strong>{act.name}</strong> {act.action}</p>
-                                        <span>{act.time}</span>
+                                        <p><strong>{act.userName || act.companyName || 'Unknown'}</strong> {act.action}</p>
+                                        <span>{formatTimeAgo(act.timestamp)}</span>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <p style={{ textAlign: 'center', color: '#6b7280', padding: '1rem' }}>No recent activity</p>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -11,7 +11,7 @@ const CompanySetup = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    
+
     const [formData, setFormData] = useState({
         companyName: '',
         companyEmail: '',
@@ -49,9 +49,9 @@ const CompanySetup = () => {
         try {
             setLoading(true);
             const response = await getCompanyProfile();
-            
-            if (response.success) {
-                const profile = response.data;
+
+            if (response) {
+                const profile = response;
                 setFormData({
                     companyName: profile.companyName || '',
                     companyEmail: profile.companyEmail || '',
@@ -154,7 +154,7 @@ const CompanySetup = () => {
                     <main className="comp-main-content">
                         {error && <div className="error-message" style={{ marginBottom: '15px' }}>{error}</div>}
                         {success && <div className="success-message" style={{ marginBottom: '15px', padding: '10px', background: '#d4edda', color: '#155724', borderRadius: '4px' }}>{success}</div>}
-                        
+
                         <div className="setup-progress-header">
                             <div className="setup-progress-box">
                                 <div className="progress-labels">
@@ -201,9 +201,9 @@ const CompanySetup = () => {
                                             />
                                             {formData.logo && (
                                                 <div style={{ marginTop: '10px', width: '120px', height: '120px', border: '2px solid #e4e5e8', borderRadius: '8px', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
-                                                    <img 
-                                                        src={formData.logo} 
-                                                        alt="Logo Preview" 
+                                                    <img
+                                                        src={formData.logo}
+                                                        alt="Logo Preview"
                                                         style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                                                         onError={(e) => { e.target.src = 'https://via.placeholder.com/100?text=Logo' }}
                                                     />
@@ -224,9 +224,9 @@ const CompanySetup = () => {
                                             />
                                             {formData.bannerImage && (
                                                 <div style={{ marginTop: '10px', width: '100%', height: '100px', border: '2px solid #e4e5e8', borderRadius: '8px', overflow: 'hidden', background: '#f9fafb' }}>
-                                                    <img 
-                                                        src={formData.bannerImage} 
-                                                        alt="Banner Preview" 
+                                                    <img
+                                                        src={formData.bannerImage}
+                                                        alt="Banner Preview"
                                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                         onError={(e) => { e.target.src = 'https://via.placeholder.com/400x100?text=Banner' }}
                                                     />
@@ -237,10 +237,10 @@ const CompanySetup = () => {
 
                                     <div className="form-group-large">
                                         <label className="input-label">Company Name*</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             name="companyName"
-                                            className="premium-input" 
+                                            className="premium-input"
                                             placeholder="Enter company name"
                                             value={formData.companyName}
                                             onChange={handleInputChange}
@@ -251,9 +251,9 @@ const CompanySetup = () => {
                                     <div className="form-group-large">
                                         <label className="input-label">About Us</label>
                                         <div className="rich-textarea-container">
-                                            <textarea 
+                                            <textarea
                                                 name="description"
-                                                className="premium-textarea" 
+                                                className="premium-textarea"
                                                 placeholder="Write down about your company here. Let the candidate know who we are..."
                                                 value={formData.description}
                                                 onChange={handleInputChange}
@@ -264,10 +264,10 @@ const CompanySetup = () => {
                                     <div className="form-row">
                                         <div className="form-group-large">
                                             <label className="input-label">Industry</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 name="industry"
-                                                className="premium-input" 
+                                                className="premium-input"
                                                 placeholder="e.g., Technology, Healthcare"
                                                 value={formData.industry}
                                                 onChange={handleInputChange}
@@ -310,8 +310,8 @@ const CompanySetup = () => {
                                     <div className="form-row">
                                         <div className="form-group-large">
                                             <label className="input-label">Founded Date</label>
-                                            <input 
-                                                type="date" 
+                                            <input
+                                                type="date"
                                                 name="founded"
                                                 className="premium-input"
                                                 value={formData.founded}
@@ -320,10 +320,10 @@ const CompanySetup = () => {
                                         </div>
                                         <div className="form-group-large">
                                             <label className="input-label">Website</label>
-                                            <input 
-                                                type="url" 
+                                            <input
+                                                type="url"
                                                 name="website"
-                                                className="premium-input" 
+                                                className="premium-input"
                                                 placeholder="https://example.com"
                                                 value={formData.website}
                                                 onChange={handleInputChange}
@@ -333,9 +333,9 @@ const CompanySetup = () => {
 
                                     <div className="form-group-large">
                                         <label className="input-label">Tech Stack (comma-separated)</label>
-                                        <input 
-                                            type="text" 
-                                            className="premium-input" 
+                                        <input
+                                            type="text"
+                                            className="premium-input"
                                             placeholder="e.g., React, Node.js, Python, AWS"
                                             value={formData.techStack.join(', ')}
                                             onChange={handleTechStackChange}
@@ -365,10 +365,10 @@ const CompanySetup = () => {
 
                                     <div className="form-group-large">
                                         <label className="input-label">LinkedIn URL</label>
-                                        <input 
-                                            type="url" 
+                                        <input
+                                            type="url"
                                             name="linkedInUrl"
-                                            className="premium-input" 
+                                            className="premium-input"
                                             placeholder="https://linkedin.com/company/yourcompany"
                                             value={formData.linkedInUrl}
                                             onChange={handleInputChange}
@@ -377,10 +377,10 @@ const CompanySetup = () => {
 
                                     <div className="form-group-large">
                                         <label className="input-label">Twitter URL</label>
-                                        <input 
-                                            type="url" 
+                                        <input
+                                            type="url"
                                             name="twitterUrl"
-                                            className="premium-input" 
+                                            className="premium-input"
                                             placeholder="https://twitter.com/yourcompany"
                                             value={formData.twitterUrl}
                                             onChange={handleInputChange}
@@ -389,10 +389,10 @@ const CompanySetup = () => {
 
                                     <div className="form-group-large">
                                         <label className="input-label">Facebook URL</label>
-                                        <input 
-                                            type="url" 
+                                        <input
+                                            type="url"
                                             name="facebookUrl"
-                                            className="premium-input" 
+                                            className="premium-input"
                                             placeholder="https://facebook.com/yourcompany"
                                             value={formData.facebookUrl}
                                             onChange={handleInputChange}
@@ -423,10 +423,10 @@ const CompanySetup = () => {
                                     <div className="form-row">
                                         <div className="form-group-large">
                                             <label className="input-label">Company Email*</label>
-                                            <input 
-                                                type="email" 
+                                            <input
+                                                type="email"
                                                 name="companyEmail"
-                                                className="premium-input" 
+                                                className="premium-input"
                                                 placeholder="contact@company.com"
                                                 value={formData.companyEmail}
                                                 onChange={handleInputChange}
@@ -435,10 +435,10 @@ const CompanySetup = () => {
                                         </div>
                                         <div className="form-group-large">
                                             <label className="input-label">Phone Number*</label>
-                                            <input 
-                                                type="tel" 
+                                            <input
+                                                type="tel"
                                                 name="phoneNumber"
-                                                className="premium-input" 
+                                                className="premium-input"
                                                 placeholder="+1 234 567 8900"
                                                 value={formData.phoneNumber}
                                                 onChange={handleInputChange}
@@ -449,10 +449,10 @@ const CompanySetup = () => {
 
                                     <div className="form-group-large">
                                         <label className="input-label">Headquarter Address</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             name="headquarterAddress"
-                                            className="premium-input" 
+                                            className="premium-input"
                                             placeholder="123 Main St"
                                             value={formData.headquarterAddress}
                                             onChange={handleInputChange}
@@ -462,10 +462,10 @@ const CompanySetup = () => {
                                     <div className="form-row">
                                         <div className="form-group-large">
                                             <label className="input-label">City</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 name="city"
-                                                className="premium-input" 
+                                                className="premium-input"
                                                 placeholder="San Francisco"
                                                 value={formData.city}
                                                 onChange={handleInputChange}
@@ -473,10 +473,10 @@ const CompanySetup = () => {
                                         </div>
                                         <div className="form-group-large">
                                             <label className="input-label">State</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 name="state"
-                                                className="premium-input" 
+                                                className="premium-input"
                                                 placeholder="CA"
                                                 value={formData.state}
                                                 onChange={handleInputChange}
@@ -487,10 +487,10 @@ const CompanySetup = () => {
                                     <div className="form-row">
                                         <div className="form-group-large">
                                             <label className="input-label">Country</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 name="country"
-                                                className="premium-input" 
+                                                className="premium-input"
                                                 placeholder="USA"
                                                 value={formData.country}
                                                 onChange={handleInputChange}
@@ -498,10 +498,10 @@ const CompanySetup = () => {
                                         </div>
                                         <div className="form-group-large">
                                             <label className="input-label">Zip Code</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 name="zipCode"
-                                                className="premium-input" 
+                                                className="premium-input"
                                                 placeholder="94105"
                                                 value={formData.zipCode}
                                                 onChange={handleInputChange}

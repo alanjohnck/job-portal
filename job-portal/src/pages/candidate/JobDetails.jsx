@@ -24,6 +24,7 @@ import {
     FaLayerGroup,
     FaCheckCircle
 } from 'react-icons/fa';
+import { IoBookmark, IoBookmarkOutline } from 'react-icons/io5';
 
 const JobDetails = () => {
     const { id } = useParams();
@@ -39,8 +40,8 @@ const JobDetails = () => {
             setLoading(true);
             try {
                 const response = await getJobDetails(id);
-                if (response.success) {
-                    const apiJob = response.data;
+                if (response && response.id) {
+                    const apiJob = response;
                     const mappedJob = {
                         id: apiJob.id,
                         title: apiJob.title,
@@ -55,6 +56,9 @@ const JobDetails = () => {
                         education: apiJob.education,
                         experience: apiJob.experience,
                         level: apiJob.experienceLevel,
+                        responsibilities: apiJob.responsibilities || [],
+                        requirements: apiJob.requirements || [], // This seems to map to 'skills' or 'qualifications' conceptually based on the screenshot
+                        skills: apiJob.requiredSkills || []
                     };
                     setJob(mappedJob);
                     setIsSaved(!!apiJob.isSaved);
@@ -65,8 +69,8 @@ const JobDetails = () => {
                         pageSize: 4
                     });
 
-                    if (relatedResp.success) {
-                        const related = relatedResp.data.items
+                    if (relatedResp && relatedResp.items) {
+                        const related = relatedResp.items
                             .filter(j => j.id !== apiJob.id)
                             .slice(0, 3)
                             .map(j => ({
@@ -100,7 +104,7 @@ const JobDetails = () => {
     const [applied, setApplied] = useState(false);
     const [applyLoading, setApplyLoading] = useState(false);
     const [applyError, setApplyError] = useState(null);
-    const [coverLetter, setCoverLetter] = useState('');
+    const [sharePortfolio, setSharePortfolio] = useState(false);
     const [resumeUrl, setResumeUrl] = useState('');
     const [resumeFile, setResumeFile] = useState(null);
 
@@ -136,7 +140,7 @@ const JobDetails = () => {
             setResumeFile(file);
             // In a real app, you would upload this to a server and get a URL
             // For now, we'll simulate with a placeholder
-            setResumeUrl(`https://example.com/resumes/${file.name}`);
+            setResumeUrl(`http://localhost:5173/resumes/${file.name}`);
         }
     };
 
@@ -153,9 +157,14 @@ const JobDetails = () => {
 
             // In a production app, you would upload the file to a storage service first
             // and get the URL. For now, we'll use the URL directly or the simulated one
-            const finalResumeUrl = resumeUrl || `https://example.com/resumes/${resumeFile?.name}`;
+            const finalResumeUrl = resumeUrl || `http://localhost:5173/resumes/${resumeFile?.name}`;
 
-            const response = await applyForJob(id, coverLetter, finalResumeUrl);
+            let finalCoverLetter = '';
+            if (sharePortfolio) {
+                finalCoverLetter = (finalCoverLetter || '') + '\n\n[Portfolio Shared]';
+            }
+
+            const response = await applyForJob(id, finalCoverLetter, finalResumeUrl);
 
             if (response.success) {
                 setApplied(true);
@@ -185,68 +194,83 @@ const JobDetails = () => {
                             <>
                                 <h2>Apply for {job.title}</h2>
                                 <p>Please provide your details to complete the application.</p>
-                                
+
                                 {applyError && (
-                                    <div className="error-message" style={{color: 'red', marginBottom: '10px'}}>
+                                    <div className="error-message" style={{ color: 'red', marginBottom: '10px' }}>
                                         {applyError}
                                     </div>
                                 )}
-                                
+
                                 <form className="upload-form" onSubmit={handleFinalSubmit}>
-                                    <div className="form-group" style={{marginBottom: '15px'}}>
-                                        <label style={{display: 'block', marginBottom: '5px'}}>Cover Letter (Optional)</label>
-                                        <textarea 
-                                            className="premium-textarea"
-                                            placeholder="Write a brief cover letter..."
-                                            value={coverLetter}
-                                            onChange={(e) => setCoverLetter(e.target.value)}
-                                            rows="4"
-                                            style={{width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px'}}
-                                        />
+                                    <div className="form-group-compact">
+                                        <label className="checkbox-label">
+                                            <input
+                                                type="checkbox"
+                                                checked={sharePortfolio}
+                                                onChange={(e) => setSharePortfolio(e.target.checked)}
+                                            />
+                                            <span>Share my portfolio with the recruiter</span>
+                                        </label>
                                     </div>
-                                    
-                                    <div className="form-group" style={{marginBottom: '15px'}}>
-                                        <label style={{display: 'block', marginBottom: '5px'}}>Resume URL (Optional)</label>
-                                        <input 
-                                            type="url"
-                                            className="premium-input"
-                                            placeholder="https://drive.google.com/..."
-                                            value={resumeUrl}
-                                            onChange={(e) => setResumeUrl(e.target.value)}
-                                            style={{width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '5px'}}
-                                        />
-                                        <small style={{color: '#666'}}>Provide a link to your resume (Google Drive, Dropbox, etc.)</small>
-                                    </div>
-                                    
-                                    <div style={{textAlign: 'center', margin: '10px 0', color: '#666'}}>OR</div>
-                                    
-                                    <div className="upload-box" onClick={() => document.getElementById('resume-file').click()}>
-                                        <FaBriefcase className="upload-icon" />
-                                        <span>{resumeFile ? resumeFile.name : 'Click to upload PDF or DOCX'}</span>
-                                        <input 
-                                            type="file" 
-                                            id="resume-file" 
-                                            hidden 
-                                            accept=".pdf,.doc,.docx" 
-                                            onChange={handleFileChange}
-                                        />
-                                    </div>
-                                    
-                                    <div className="modal-actions">
-                                        <button 
-                                            type="button" 
-                                            className="cancel-btn" 
+
+                                    {!resumeFile ? (
+                                        <>
+                                            <div className="form-group-compact">
+                                                <label className="input-label">Resume URL (Optional)</label>
+                                                <input
+                                                    type="url"
+                                                    className="premium-input"
+                                                    placeholder="https://drive.google.com/..."
+                                                    value={resumeUrl}
+                                                    onChange={(e) => setResumeUrl(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="divider-text">OR</div>
+
+                                            <div className="upload-box-compact" onClick={() => document.getElementById('resume-file').click()}>
+                                                <FaBriefcase className="upload-icon-small" />
+                                                <span>Click to upload PDF or DOCX</span>
+                                                <input
+                                                    type="file"
+                                                    id="resume-file"
+                                                    hidden
+                                                    accept=".pdf,.doc,.docx"
+                                                    onChange={handleFileChange}
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="selected-file-box">
+                                            <div className="file-info">
+                                                <FaBriefcase className="file-icon" />
+                                                <span className="file-name">{resumeFile.name}</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="remove-file-btn"
+                                                onClick={() => { setResumeFile(null); setResumeUrl(''); }}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className="modal-actions-compact">
+                                        <button
+                                            type="button"
+                                            className="cancel-btn-compact"
                                             onClick={() => setShowApplyModal(false)}
                                             disabled={applyLoading}
                                         >
                                             Cancel
                                         </button>
-                                        <button 
-                                            type="submit" 
-                                            className="submit-btn"
+                                        <button
+                                            type="submit"
+                                            className="submit-btn-compact"
                                             disabled={applyLoading}
                                         >
-                                            {applyLoading ? 'Submitting...' : 'Submit Application'}
+                                            {applyLoading ? 'Sending...' : 'Submit Application'}
                                         </button>
                                     </div>
                                 </form>
@@ -296,7 +320,11 @@ const JobDetails = () => {
                             disabled={saveLoading}
                             aria-label={isSaved ? 'Unsave job' : 'Save job'}
                         >
-                            {isSaved ? <FaBookmark /> : <FaRegBookmark />}
+                            {isSaved ? (
+                                <IoBookmark size={24} />
+                            ) : (
+                                <IoBookmarkOutline size={24} />
+                            )}
                         </button>
                         <button className="apply-btn-primary" onClick={handleApply}>{applied ? 'Applied' : 'Apply Now'}</button>
                     </div>
@@ -311,6 +339,39 @@ const JobDetails = () => {
                                 <p key={i}>{line}</p>
                             ))}
                         </div>
+
+                        {job.responsibilities && job.responsibilities.length > 0 && (
+                            <>
+                                <div className="section-title">Key Responsibilities</div>
+                                <ul className="requirements-list">
+                                    {job.responsibilities.map((res, index) => (
+                                        <li key={index}>{res}</li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+
+                        {job.requirements && job.requirements.length > 0 && (
+                            <>
+                                <div className="section-title">Requirements & Qualifications</div>
+                                <ul className="requirements-list">
+                                    {job.requirements.map((req, index) => (
+                                        <li key={index}>{req}</li>
+                                    ))}
+                                </ul>
+                            </>
+                        )}
+
+                        {job.skills && job.skills.length > 0 && (
+                            <>
+                                <div className="section-title">Required Skills</div>
+                                <div className="skills-container-details">
+                                    {job.skills.map((skill, index) => (
+                                        <span key={index} className="skill-pill-details">{skill}</span>
+                                    ))}
+                                </div>
+                            </>
+                        )}
 
                         <div className="section-title">Share this job:</div>
                         <div className="share-links">
@@ -378,8 +439,9 @@ const JobDetails = () => {
                         ))}
                     </div>
                 </div>
+
             </main>
-        </div>
+        </div >
     );
 };
 

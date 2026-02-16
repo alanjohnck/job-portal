@@ -25,7 +25,11 @@ public class JobPortalDbContext : DbContext
     public DbSet<WorkExperience> WorkExperiences { get; set; }
     public DbSet<Education> Educations { get; set; }
     public DbSet<Certification> Certifications { get; set; }
+    public DbSet<Project> Projects { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<TestQuestion> TestQuestions { get; set; }
+    public DbSet<TestQuestionOption> TestQuestionOptions { get; set; }
+    public DbSet<TestAnswer> TestAnswers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,6 +59,7 @@ public class JobPortalDbContext : DbContext
             entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            entity.Property(e => e.ExpectedSalary).HasColumnType("decimal(18,2)");
             
             // Configure array properties
             entity.Property(e => e.Skills)
@@ -136,6 +141,29 @@ public class JobPortalDbContext : DbContext
             entity.Property(e => e.CredentialUrl).HasMaxLength(500);
         });
 
+        // Project Configuration
+        modelBuilder.Entity<Project>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.CandidateId);
+            
+            entity.HasOne(e => e.Candidate)
+                .WithMany(c => c.Projects)
+                .HasForeignKey(e => e.CandidateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.ProjectUrl).HasMaxLength(500);
+            entity.Property(e => e.RepoUrl).HasMaxLength(500);
+            entity.Property(e => e.ImageUrl).HasMaxLength(500);
+
+            entity.Property(e => e.Technologies)
+                .HasConversion(
+                    v => string.Join(',', v),
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries));
+        });
+
         // Company Configuration
         modelBuilder.Entity<Company>(entity =>
         {
@@ -150,6 +178,7 @@ public class JobPortalDbContext : DbContext
 
             entity.Property(e => e.CompanyName).IsRequired().HasMaxLength(255);
             entity.Property(e => e.CompanyEmail).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.AnnualRevenue).HasColumnType("decimal(18,2)");
             
             // Configure array properties
             entity.Property(e => e.TechStack)
@@ -174,6 +203,8 @@ public class JobPortalDbContext : DbContext
 
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Description).IsRequired();
+            entity.Property(e => e.MinSalary).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.MaxSalary).HasColumnType("decimal(18,2)");
             
             // Configure array properties
             entity.Property(e => e.Requirements)
@@ -343,6 +374,49 @@ public class JobPortalDbContext : DbContext
             entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Message).IsRequired().HasMaxLength(1000);
             entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
+        });
+
+        // TestQuestion Configuration
+        modelBuilder.Entity<TestQuestion>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.MockTest)
+                .WithMany(m => m.Questions)
+                .HasForeignKey(e => e.MockTestId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TestQuestionOption Configuration
+        modelBuilder.Entity<TestQuestionOption>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.TestQuestion)
+                .WithMany(q => q.Options)
+                .HasForeignKey(e => e.TestQuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TestAnswer Configuration
+        modelBuilder.Entity<TestAnswer>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TestResultId);
+            entity.HasIndex(e => e.TestQuestionId);
+
+            entity.HasOne(e => e.TestResult)
+                .WithMany(tr => tr.Answers)
+                .HasForeignKey(e => e.TestResultId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.TestQuestion)
+                .WithMany(q => q.Answers) // Updated to reflect model
+                .HasForeignKey(e => e.TestQuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.SelectedOption)
+                .WithMany()
+                .HasForeignKey(e => e.SelectedOptionId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

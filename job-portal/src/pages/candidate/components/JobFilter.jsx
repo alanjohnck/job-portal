@@ -24,19 +24,19 @@ const JobFilter = ({ onClose, onApply }) => {
     ];
 
     const jobTypes = [
-        { id: 'full-time', label: 'Full Time' },
-        { id: 'part-time', label: 'Part-Time' },
-        { id: 'internship', label: 'Internship' },
-        { id: 'temporary', label: 'Temporary' },
-        { id: 'contract', label: 'Contract Base' },
+        { id: 'Full-time', label: 'Full Time' },
+        { id: 'Part-time', label: 'Part-Time' },
+        { id: 'Internship', label: 'Internship' },
+        { id: 'Temporary', label: 'Temporary' },
+        { id: 'Contract', label: 'Contract Base' },
     ];
 
     const salaryRanges = [
-        { id: '10-100', label: '$10 - $100' }, // Assuming these are thousands
-        { id: '100-1000', label: '$100 - $1,000' },
-        { id: '1000-10000', label: '$1,000 - $10,000' },
-        { id: '10000-100000', label: '$10,000 - $100,000' },
-        { id: '100000-up', label: '$100,000 Up' },
+        { id: '10000-50000', label: '$10k - $50k' },
+        { id: '50000-100000', label: '$50k - $100k' },
+        { id: '100000-150000', label: '$100k - $150k' },
+        { id: '150000-200000', label: '$150k - $200k' },
+        { id: '200000-up', label: '$200k Up' },
         { id: 'custom', label: 'Custom' },
     ];
 

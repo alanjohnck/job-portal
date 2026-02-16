@@ -23,6 +23,7 @@ public class UserDto
 {
     public Guid Id { get; set; }
     public string Email { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty; // Added FullName
     public string Role { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -36,6 +37,7 @@ public class SupportTicketDto
     public string Subject { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Priority { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -48,4 +50,5 @@ public class CreateSupportTicketRequest
     public string Subject { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Priority { get; set; } = "Medium";
+    public string Type { get; set; } = "General";
 }

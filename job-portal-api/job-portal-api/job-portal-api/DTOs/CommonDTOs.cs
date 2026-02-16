@@ -105,6 +105,7 @@ public class CandidateProfileDto
     public List<WorkExperienceDto> WorkExperiences { get; set; } = new();
     public List<EducationDto> Educations { get; set; } = new();
     public List<CertificationDto> Certifications { get; set; } = new();
+    public List<ProjectDto> Projects { get; set; } = new();
 }
 
 public class UpdateCandidateProfileRequest
@@ -261,6 +262,38 @@ public class UpdateCertificationRequest
     public string? CredentialUrl { get; set; }
 }
 
+// Project DTOs
+public class ProjectDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string[] Technologies { get; set; } = Array.Empty<string>();
+    public string? ProjectUrl { get; set; }
+    public string? RepoUrl { get; set; }
+    public string? ImageUrl { get; set; }
+}
+
+public class CreateProjectRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string[] Technologies { get; set; } = Array.Empty<string>();
+    public string? ProjectUrl { get; set; }
+    public string? RepoUrl { get; set; }
+    public string? ImageUrl { get; set; }
+}
+
+public class UpdateProjectRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string[] Technologies { get; set; } = Array.Empty<string>();
+    public string? ProjectUrl { get; set; }
+    public string? RepoUrl { get; set; }
+    public string? ImageUrl { get; set; }
+}
+
 // Company DTOs
 public class CompanyProfileDto
 {
@@ -393,6 +426,7 @@ public class JobDto
     public int ApplicationsCount { get; set; }
     public bool HasApplied { get; set; }
     public bool IsSaved { get; set; }
+    public List<MockTestDto> MockTests { get; set; } = new();
 }
 
 public class CompanyBasicInfo

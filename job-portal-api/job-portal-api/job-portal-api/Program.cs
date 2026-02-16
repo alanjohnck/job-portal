@@ -33,12 +33,15 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICandidateService, CandidateService>();
 builder.Services.AddScoped<ICandidateProfileService, CandidateProfileService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMockTestService, MockTestService>();
+builder.Services.AddScoped<ITestService, TestService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ISupportService, SupportService>();
 
 
 
+////Data Source=ALANJOHN\\SQLEXPRESS;Initial Catalog=JobPortalDB;Integrated Security=True;Encrypt=False
 
 
 // Configure JWT Authentication
@@ -154,7 +157,10 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<JobPortalDbContext>();
-        context.Database.Migrate();
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
         await DataSeeder.SeedAsync(context);
     }
     catch (Exception ex)

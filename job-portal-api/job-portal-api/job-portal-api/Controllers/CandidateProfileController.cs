@@ -182,4 +182,37 @@ var result = await _profileService.DeleteEducationAsync(userId, educationId);
         var result = await _profileService.UpdateSkillsAsync(userId, request.Skills);
         return result.Success ? Ok(result) : NotFound(result);
     }
+
+    // Project Endpoints
+    [HttpGet("projects")]
+    public async Task<IActionResult> GetProjects()
+    {
+        var userId = GetUserId();
+        var result = await _profileService.GetProjectsAsync(userId);
+        return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    [HttpPost("projects")]
+    public async Task<IActionResult> CreateProject([FromBody] CreateProjectRequest request)
+    {
+        var userId = GetUserId();
+        var result = await _profileService.CreateProjectAsync(userId, request);
+        return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    [HttpPut("projects/{projectId}")]
+    public async Task<IActionResult> UpdateProject(Guid projectId, [FromBody] UpdateProjectRequest request)
+    {
+        var userId = GetUserId();
+        var result = await _profileService.UpdateProjectAsync(userId, projectId, request);
+        return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    [HttpDelete("projects/{projectId}")]
+    public async Task<IActionResult> DeleteProject(Guid projectId)
+    {
+        var userId = GetUserId();
+        var result = await _profileService.DeleteProjectAsync(userId, projectId);
+        return result.Success ? Ok(result) : NotFound(result);
+    }
 }

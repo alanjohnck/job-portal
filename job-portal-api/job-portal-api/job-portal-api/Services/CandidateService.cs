@@ -19,6 +19,7 @@ public class CandidateService : ICandidateService
     {
         var candidate = await _context.Candidates
             .Include(c => c.User)
+            .Include(c => c.Projects)
             .FirstOrDefaultAsync(c => c.UserId == userId);
 
         if (candidate == null)
@@ -49,6 +50,16 @@ public class CandidateService : ICandidateService
             PreferredJobTypes = candidate.PreferredJobTypes,
             ExpectedSalary = candidate.ExpectedSalary,
             PreferredLocations = candidate.PreferredLocations,
+            Projects = candidate.Projects.Select(p => new ProjectDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                Technologies = p.Technologies,
+                ProjectUrl = p.ProjectUrl,
+                RepoUrl = p.RepoUrl,
+                ImageUrl = p.ImageUrl
+            }).ToList(),
             CreatedAt = candidate.CreatedAt,
             UpdatedAt = candidate.UpdatedAt
         };
@@ -108,12 +119,12 @@ public class CandidateService : ICandidateService
 
         if (!string.IsNullOrEmpty(jobType))
         {
-            query = query.Where(j => j.JobType == jobType);
+            query = query.Where(j => j.JobType.ToLower() == jobType.ToLower());
         }
 
         if (!string.IsNullOrEmpty(experienceLevel))
         {
-            query = query.Where(j => j.ExperienceLevel == experienceLevel);
+            query = query.Where(j => j.ExperienceLevel.ToLower() == experienceLevel.ToLower());
         }
 
         if (minSalary.HasValue)
@@ -128,7 +139,7 @@ public class CandidateService : ICandidateService
 
         if (!string.IsNullOrEmpty(category))
         {
-            query = query.Where(j => j.Category == category);
+            query = query.Where(j => j.Category != null && j.Category.ToLower() == category.ToLower());
         }
 
         if (isRemote.HasValue && isRemote.Value)

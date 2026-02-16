@@ -13,6 +13,6 @@ public interface IMockTestService
     Task<ApiResponse<object>> DeleteMockTestAsync(Guid userId, Guid mockTestId);
     
     // Candidate methods
-    Task<ApiResponse<List<MockTestDto>>> GetAvailableMockTestsAsync(Guid userId);
+    Task<ApiResponse<List<TestAttemptDto>>> GetAvailableMockTestsAsync(Guid userId);
     Task<ApiResponse<TestResultDto>> SubmitTestResultAsync(Guid userId, Guid mockTestId, int score);
 }

@@ -8,14 +8,17 @@ import CustomerSupport from './pages/candidate/CustomerSupport'
 import CompanyDetails from './pages/candidate/CompanyDetails'
 import JobDetails from './pages/candidate/JobDetails'
 import MyProfile from './pages/candidate/MyProfile'
+import PublicPortfolio from './pages/candidate/PublicPortfolio'
 import CompanySetup from './pages/company/CompanySetup'
 import CompanyDashboard from './pages/company/CompanyDashboard'
 import PostJob from './pages/company/PostJob'
 import MyJobs from './pages/company/MyJobs'
 import Applications from './pages/company/Applications'
+import CandidateProfileView from './pages/company/CandidateProfileView'
 import SavedCandidates from './pages/company/SavedCandidates'
 import FindCandidate from './pages/company/FindCandidate'
 import MockTests from './pages/company/MockTests'
+import CompanySupport from './pages/company/CompanySupport'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminCompanies from './pages/admin/AdminCompanies'
@@ -37,14 +40,17 @@ function App() {
         <Route path="/candidate/company-details/:id" element={<CompanyDetails />} />
         <Route path="/candidate/job-details/:id" element={<JobDetails />} />
         <Route path="/candidate/profile" element={<MyProfile />} />
+        <Route path="/portfolio/:candidateId" element={<PublicPortfolio />} />
         <Route path="/company/setup" element={<CompanySetup />} />
         <Route path="/company/dashboard" element={<CompanyDashboard />} />
         <Route path="/company/post-job" element={<PostJob />} />
         <Route path="/company/my-jobs" element={<MyJobs />} />
         <Route path="/company/applications/:jobId" element={<Applications />} />
+        <Route path="/company/candidate/:candidateId" element={<CandidateProfileView />} />
         <Route path="/company/saved-candidates" element={<SavedCandidates />} />
         <Route path="/company/find-candidate" element={<FindCandidate />} />
         <Route path="/company/mock-tests" element={<MockTests />} />
+        <Route path="/company/support" element={<CompanySupport />} />
 
         {/* Admin Routes */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />

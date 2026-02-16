@@ -20,8 +20,8 @@ const FindJobs = () => {
       setLoading(true);
       try {
         const response = await getJobs({ ...filters, page, pageSize: 12 });
-        if (response.success) {
-          const mappedJobs = response.data.items.map(job => ({
+        if (response && response.items) {
+          const mappedJobs = response.items.map(job => ({
             id: job.id,
             title: job.title,
             company: job.company?.name || 'Unknown',
@@ -35,7 +35,7 @@ const FindJobs = () => {
             experience: job.experience
           }));
           setJobs(mappedJobs);
-          setTotalPages(response.data.pagination.totalPages);
+          setTotalPages(response.pagination?.totalPages || 1);
         }
       } catch (error) {
         console.error("Error fetching jobs:", error);
@@ -68,14 +68,19 @@ const FindJobs = () => {
   };
 
   const applyFilters = (newFilters) => {
-    setFilters(newFilters);
+    setFilters(prev => ({ ...prev, ...newFilters }));
     setPage(1);
     setShowFilters(false); // Close sidebar on mobile after apply
   };
 
+  const handleSearch = ({ keyword, location }) => {
+    setFilters(prev => ({ ...prev, keyword, location }));
+    setPage(1);
+  };
+
   return (
     <div className="find-jobs-page">
-      <Header />
+      <Header onSearch={handleSearch} />
 
       <main className="container jobs-content">
         <div className={`find-jobs-layout ${showFilters ? 'filters-expanded' : ''}`}>

@@ -9,8 +9,9 @@ public class SupportTicket
 
     public string Subject { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string Type { get; set; } = "General"; // "General", "Technical", "Billing", "Account"
     public string Priority { get; set; } = "Medium"; // "Low", "Medium", "High"
-    public string Status { get; set; } = "Open";    // "Open", "In Progress", "Closed"
+    public string Status { get; set; } = "Open";    // "Open", "InProgress", "Closed", "Resolved"
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import CompanyNavbar from './components/CompanyNavbar';
 import CompanySidebar from './components/CompanySidebar';
-import { FaEllipsisH, FaDownload, FaPlus, FaChevronRight, FaEdit, FaTrashAlt } from 'react-icons/fa';
+import { FaEllipsisH, FaDownload, FaPlus, FaChevronRight, FaEdit, FaTrashAlt, FaLink } from 'react-icons/fa';
 import { getJobApplications, updateApplicationStatus } from '../../services/api';
 import { formatDate } from '../../utils/formatters';
 import './Applications.css';
@@ -16,6 +16,9 @@ const Applications = () => {
     const [showSort, setShowSort] = useState(false);
     const [activeColMenu, setActiveColMenu] = useState(null);
     const [jobTitle, setJobTitle] = useState('Job');
+    const [updatingAppId, setUpdatingAppId] = useState(null);
+
+    const statusOptions = ['Applied', 'Shortlisted', 'Interviewed', 'Offered', 'Rejected', 'Hired'];
 
     useEffect(() => {
         if (!jobId) {
@@ -40,19 +43,22 @@ const Applications = () => {
         setError(null);
         try {
             const response = await getJobApplications(selectedJobId);
-            
+
             if (response.success && response.data) {
                 const applications = response.data.items || [];
-                
-                // Group applications by their kanban column
-                const columnMap = {};
+
+                const columnMap = new Map();
+                statusOptions.forEach(status => columnMap.set(status, []));
+
                 applications.forEach(app => {
-                    const col = app.kanbanColumn || 'All Application';
-                    if (!columnMap[col]) {
-                        columnMap[col] = [];
+                    const status = app.status || 'Applied';
+                    if (!columnMap.has(status)) {
+                        columnMap.set(status, []);
                     }
-                    columnMap[col].push({
+
+                    columnMap.get(status).push({
                         id: app.id,
+                        candidateId: app.candidate?.id,
                         name: `${app.candidate.firstName} ${app.candidate.lastName}`,
                         initials: `${app.candidate.firstName?.[0] || ''}${app.candidate.lastName?.[0] || ''}`,
                         role: app.candidate.currentJobTitle || 'Candidate',
@@ -62,25 +68,17 @@ const Applications = () => {
                         image: app.candidate.profilePicture,
                         resumeUrl: app.resumeUrl,
                         coverLetter: app.coverLetter,
-                        status: app.status,
+                        status: status,
                         email: app.candidate.email,
                         skills: app.candidate.skills || []
                     });
                 });
 
-                // Convert to columns array
-                const columnsArray = Object.entries(columnMap).map(([title, apps]) => ({
+                const columnsArray = Array.from(columnMap.entries()).map(([title, apps]) => ({
                     title,
                     count: apps.length,
                     applications: apps
                 }));
-
-                // Ensure "All Application" is first if it exists
-                columnsArray.sort((a, b) => {
-                    if (a.title === 'All Application') return -1;
-                    if (b.title === 'All Application') return 1;
-                    return 0;
-                });
 
                 setColumns(columnsArray);
             }
@@ -101,6 +99,20 @@ const Applications = () => {
         }
     };
 
+    const handleStatusChange = async (applicationId, status) => {
+        if (!applicationId || !status) return;
+        try {
+            setUpdatingAppId(applicationId);
+            await updateApplicationStatus(applicationId, status, status);
+            await fetchApplications(jobId);
+        } catch (err) {
+            console.error('Error updating application status:', err);
+            alert('Failed to update status. Please try again.');
+        } finally {
+            setUpdatingAppId(null);
+        }
+    };
+
     return (
         <div className="comp-layout">
             <CompanyNavbar />
@@ -110,8 +122,8 @@ const Applications = () => {
 
                     <main className="comp-main-content">
                         <nav className="breadcrumb">
-                            <span onClick={() => navigate('/company/dashboard')} style={{cursor: 'pointer'}}>Home</span> <FaChevronRight size={10} />
-                            <span onClick={() => navigate('/company/my-jobs')} style={{cursor: 'pointer'}}>Jobs</span> <FaChevronRight size={10} />
+                            <span onClick={() => navigate('/company/dashboard')} style={{ cursor: 'pointer' }}>Home</span> <FaChevronRight size={10} />
+                            <span onClick={() => navigate('/company/my-jobs')} style={{ cursor: 'pointer' }}>Jobs</span> <FaChevronRight size={10} />
                             <span className="active">Applications</span>
                         </nav>
 
@@ -206,23 +218,60 @@ const Applications = () => {
                                                         )}
                                                     </div>
                                                     <div className="card-footer">
-                                                        <button 
-                                                            className="download-cv-btn"
-                                                            onClick={() => handleDownloadResume(app.resumeUrl, app.name)}
-                                                            disabled={!app.resumeUrl}
-                                                            title={app.resumeUrl ? 'Download Resume' : 'Resume not available'}
-                                                        >
-                                                            <FaDownload /> {app.resumeUrl ? 'Download CV' : 'No Resume'}
-                                                        </button>
+                                                        <div className="card-footer-actions">
+                                                            <button
+                                                                className="view-profile-btn"
+                                                                onClick={() => {
+                                                                    if (app.candidateId) {
+                                                                        // Open in new tab as requested
+                                                                        window.open(`/company/candidate/${app.candidateId}`, '_blank');
+                                                                    }
+                                                                }}
+                                                                disabled={!app.candidateId}
+                                                                title={app.candidateId ? 'View full profile' : 'Profile unavailable'}
+                                                            >
+                                                                View Profile
+                                                            </button>
+
+                                                            {app.coverLetter && app.coverLetter.includes('[Portfolio Shared]') && (
+                                                                <button
+                                                                    className="view-profile-btn"
+                                                                    style={{ backgroundColor: '#8b5cf6', color: 'white', border: 'none', marginLeft: '5px' }}
+                                                                    onClick={() => window.open(`/portfolio/${app.candidateId}`, '_blank')}
+                                                                    title="Candidate shared their portfolio"
+                                                                >
+                                                                    <FaLink /> Portfolio
+                                                                </button>
+                                                            )}
+
+                                                            <div className="status-control">
+                                                                <span>Move to</span>
+                                                                <select
+                                                                    className="status-select"
+                                                                    value={app.status || 'Applied'}
+                                                                    onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                                                                    disabled={updatingAppId === app.id}
+                                                                >
+                                                                    {statusOptions.map((status) => (
+                                                                        <option key={status} value={status}>{status}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                            <button
+                                                                className="download-cv-btn"
+                                                                onClick={() => handleDownloadResume(app.resumeUrl, app.name)}
+                                                                disabled={!app.resumeUrl}
+                                                                title={app.resumeUrl ? 'Download Resume' : 'Resume not available'}
+                                                            >
+                                                                <FaDownload /> {app.resumeUrl ? 'Download CV' : 'No Resume'}
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 ))}
-                                <button className="create-column-btn">
-                                    <FaPlus /> Create Column
-                                </button>
                             </div>
                         )}
 

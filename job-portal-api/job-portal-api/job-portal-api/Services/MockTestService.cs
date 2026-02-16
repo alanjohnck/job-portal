@@ -39,7 +39,7 @@ public class MockTestService : IMockTestService
             Title = request.Title,
             Description = request.Description,
             ScheduledDate = request.ScheduledDate,
-            StartTime = request.StartTime,
+            StartTime = TimeSpan.Parse(request.StartTime),
             DurationMinutes = request.DurationMinutes,
             PassingScore = request.PassingScore,
             Status = request.Status,
@@ -49,6 +49,42 @@ public class MockTestService : IMockTestService
         };
 
         _context.MockTests.Add(mockTest);
+        
+        // Add Questions
+        if (request.Questions != null && request.Questions.Any())
+        {
+            foreach (var qDto in request.Questions)
+            {
+                var question = new TestQuestion
+                {
+                    Id = Guid.NewGuid(),
+                    MockTestId = mockTest.Id,
+                    QuestionText = qDto.QuestionText,
+                    Points = qDto.Points,
+                    OrderNumber = qDto.OrderNumber,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                _context.TestQuestions.Add(question);
+
+                if (qDto.Options != null && qDto.Options.Any())
+                {
+                    foreach (var oDto in qDto.Options)
+                    {
+                        var option = new TestQuestionOption
+                        {
+                            Id = Guid.NewGuid(),
+                            TestQuestionId = question.Id,
+                            OptionText = oDto.OptionText,
+                            OrderNumber = oDto.OrderNumber,
+                            IsCorrect = oDto.IsCorrect ?? false
+                        };
+                        _context.TestQuestionOptions.Add(option);
+                    }
+                }
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         return await GetMockTestDetailsAsync(mockTest.Id);
@@ -58,6 +94,9 @@ public class MockTestService : IMockTestService
     {
         var mockTest = await _context.MockTests
             .Include(m => m.Company)
+            .Include(m => m.Job)
+            .Include(m => m.Questions)
+            .ThenInclude(q => q.Options)
             .FirstOrDefaultAsync(m => m.Id == mockTestId);
 
         if (mockTest == null)
@@ -67,6 +106,7 @@ public class MockTestService : IMockTestService
         {
             Id = mockTest.Id,
             JobId = mockTest.JobId,
+            JobTitle = mockTest.Job?.Title ?? "Unknown Job",
             Title = mockTest.Title,
             Description = mockTest.Description,
             ScheduledDate = mockTest.ScheduledDate,
@@ -81,7 +121,21 @@ public class MockTestService : IMockTestService
                 Name = mockTest.Company.CompanyName,
                 Logo = mockTest.Company.Logo,
                 Industry = mockTest.Company.Industry
-            }
+            },
+            Questions = mockTest.Questions.Select(q => new TestQuestionDto
+            {
+                Id = q.Id,
+                QuestionText = q.QuestionText,
+                Points = q.Points,
+                OrderNumber = q.OrderNumber,
+                Options = q.Options.Select(o => new TestQuestionOptionDto
+                {
+                    Id = o.Id,
+                    OptionText = o.OptionText,
+                    OrderNumber = o.OrderNumber,
+                    IsCorrect = o.IsCorrect
+                }).ToList()
+            }).ToList()
         };
 
         return ApiResponse<MockTestDto>.SuccessResponse(dto);
@@ -93,7 +147,9 @@ public class MockTestService : IMockTestService
         if (company == null)
             return ApiResponse<List<MockTestDto>>.ErrorResponse("Company profile not found", "NOT_FOUND");
 
-        var query = _context.MockTests.Where(m => m.CompanyId == company.Id);
+        var query = _context.MockTests
+            .Include(m => m.Job)
+            .Where(m => m.CompanyId == company.Id);
 
         if (!string.IsNullOrEmpty(status))
         {
@@ -113,6 +169,7 @@ public class MockTestService : IMockTestService
         {
             Id = m.Id,
             JobId = m.JobId,
+            JobTitle = m.Job?.Title ?? "Unknown Job",
             Title = m.Title,
             Description = m.Description,
             ScheduledDate = m.ScheduledDate,
@@ -140,7 +197,7 @@ public class MockTestService : IMockTestService
         mockTest.Title = request.Title;
         mockTest.Description = request.Description;
         mockTest.ScheduledDate = request.ScheduledDate;
-        mockTest.StartTime = request.StartTime;
+        mockTest.StartTime = TimeSpan.Parse(request.StartTime);
         mockTest.DurationMinutes = request.DurationMinutes;
         mockTest.PassingScore = request.PassingScore;
         mockTest.Status = request.Status;
@@ -206,74 +263,173 @@ public class MockTestService : IMockTestService
 
         return ApiResponse<List<TestResultDto>>.SuccessResponse(dtos);
     }
-    
+
     // Candidate Methods can be implemented similarly
     // For brevity, using placeholders or basic logic
-    public async Task<ApiResponse<List<MockTestDto>>> GetAvailableMockTestsAsync(Guid userId)
+    public async Task<ApiResponse<List<TestAttemptDto>>> GetAvailableMockTestsAsync(Guid userId)
     {
-        // Return tests that are 'Scheduled' and maybe relevant to candidate (e.g. applied jobs)
-        // Simplified: return all scheduled tests
+        var candidate = await _context.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (candidate == null)
+            return ApiResponse<List<TestAttemptDto>>.ErrorResponse("Candidate profile not found", "NOT_FOUND");
+
+        // Get JobIds where candidate is shortlisted
+        var shortlistedApplications = await _context.JobApplications
+            .Where(a => a.CandidateId == candidate.Id && a.Status == "Shortlisted")
+            .Select(a => new { a.JobId, a.Job.Title, a.Job.Company.CompanyName })
+            .ToListAsync();
+            
+        var jobIds = shortlistedApplications.Select(app => app.JobId).ToList();
+
+        // Return tests that are 'Scheduled' and associated with relevant jobs
         var tests = await _context.MockTests
             .Include(m => m.Company)
-            .Where(m => m.Status == "Scheduled")
+            .Include(m => m.Job)
+            .Include(m => m.Questions)
+            .Where(m => m.Status == "Scheduled" && jobIds.Contains(m.JobId))
             .OrderBy(m => m.ScheduledDate)
             .ToListAsync();
             
-        var dtos = tests.Select(m => new MockTestDto
+        var dtos = new List<TestAttemptDto>();
+        
+        foreach (var test in tests)
         {
-            Id = m.Id,
-            JobId = m.JobId,
-            Title = m.Title,
-            Description = m.Description,
-            ScheduledDate = m.ScheduledDate,
-            StartTime = m.StartTime,
-            DurationMinutes = m.DurationMinutes,
-            PassingScore = m.PassingScore,
-            Status = m.Status,
-            TotalApplicants = m.TotalApplicants,
-            Company = new CompanyBasicInfo { Id = m.Company.Id, Name = m.Company.CompanyName }
-        }).ToList();
+            var existingResult = await _context.TestResults
+                .FirstOrDefaultAsync(r => r.MockTestId == test.Id && r.CandidateId == candidate.Id);
+                
+            var status = existingResult != null ? existingResult.Status : "Not Started"; // "Not Started", "In Progress", "Completed"
+            
+            dtos.Add(new TestAttemptDto
+            {
+                // Result Id if exists, else empty or new guid logic handled by start test
+                Id = existingResult?.Id ?? Guid.Empty, 
+                TestId = test.Id,
+                TestTitle = test.Title,
+                JobTitle = test.Job?.Title ?? "Unknown Job",
+                CompanyName = test.Company.CompanyName,
+                ScheduledDate = test.ScheduledDate,
+                StartTime = test.StartTime,
+                DurationMinutes = test.DurationMinutes,
+                Status = status,
+                Score = existingResult?.Score,
+                TotalPoints = existingResult?.TotalPoints ?? test.Questions.Sum(q => q.Points), // If not started, can calculate total points if questions loaded, but might be heavy. For now 0 or null.
+                HasPassed = existingResult?.HasPassed,
+                StartedAt = existingResult?.StartedAt,
+                CompletedAt = existingResult?.CompletedAt
+            });
+        }
 
-        return ApiResponse<List<MockTestDto>>.SuccessResponse(dtos);
+        return ApiResponse<List<TestAttemptDto>>.SuccessResponse(dtos);
     }
     
     public async Task<ApiResponse<TestResultDto>> SubmitTestResultAsync(Guid userId, Guid mockTestId, int score)
     {
-        var candidate = await _context.Candidates.FirstOrDefaultAsync(c => c.UserId == userId);
+        var candidate = await _context.Candidates
+            .Include(c => c.User)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+
         if (candidate == null)
             return ApiResponse<TestResultDto>.ErrorResponse("Candidate profile not found", "NOT_FOUND");
             
-        var mockTest = await _context.MockTests.FindAsync(mockTestId);
+        var mockTest = await _context.MockTests
+            .Include(m => m.Questions)
+            .FirstOrDefaultAsync(m => m.Id == mockTestId);
+
         if (mockTest == null)
             return ApiResponse<TestResultDto>.ErrorResponse("Mock test not found", "NOT_FOUND");
             
+        // Validate if candidate is eligible (Shortlisted for the job)
+        var isEligible = await _context.JobApplications
+            .AnyAsync(a => a.CandidateId == candidate.Id && a.JobId == mockTest.JobId && a.Status == "Shortlisted");
+            
+        if (!isEligible)
+             return ApiResponse<TestResultDto>.ErrorResponse("You are not eligible to take this test. Status must be 'Shortlisted'.", "FORBIDDEN");
+
+        // Check if already submitted or in progress
+        var existingResult = await _context.TestResults
+            .FirstOrDefaultAsync(r => r.MockTestId == mockTestId && r.CandidateId == candidate.Id);
+
+        if (existingResult != null && existingResult.Status == "Completed")
+             return ApiResponse<TestResultDto>.ErrorResponse("Test already submitted.", "CONFLICT");
+
+        var totalPoints = mockTest.Questions.Sum(q => q.Points);
         var hasPassed = score >= mockTest.PassingScore;
         
-        var result = new TestResult
+        TestResult result;
+        
+        if (existingResult != null)
         {
-            Id = Guid.NewGuid(),
-            MockTestId = mockTestId,
-            CandidateId = candidate.Id,
-            Score = score,
-            Rank = 0, // Should be calculated
-            HasPassed = hasPassed,
-            CompletedAt = DateTime.UtcNow
-        };
-        
-        _context.TestResults.Add(result);
-        mockTest.TotalApplicants++; // Increment applicant count
-        
-        await _context.SaveChangesAsync();
-        
-        // Calculate rank efficiently? Skipping for now.
-        
-        return ApiResponse<TestResultDto>.SuccessResponse(new TestResultDto
+            // Update existing result
+            result = existingResult;
+            result.Score = score;
+            result.TotalPoints = totalPoints;
+            result.HasPassed = hasPassed;
+            result.Status = "Completed";
+            result.CompletedAt = DateTime.UtcNow;
+            
+            _context.TestResults.Update(result);
+        }
+        else
         {
-            Id = result.Id,
-            MockTestId = mockTestId,
-            Score = score,
-            HasPassed = hasPassed,
-            CompletedAt = result.CompletedAt
-        });
+            // Create new result
+            result = new TestResult
+            {
+                Id = Guid.NewGuid(),
+                MockTestId = mockTestId,
+                CandidateId = candidate.Id,
+                Score = score,
+                TotalPoints = totalPoints,
+                Rank = 0, // Will be calculated below
+                HasPassed = hasPassed,
+                Status = "Completed",
+                CompletedAt = DateTime.UtcNow
+            };
+            
+            _context.TestResults.Add(result);
+            mockTest.TotalApplicants++; // Increment applicant count only for new attempts
+        }
+        
+        try
+        {
+            await _context.SaveChangesAsync();
+            
+            // Calculate Rank: Update ranks for all results of this test
+            var allResults = await _context.TestResults
+                .Where(r => r.MockTestId == mockTestId && r.Status == "Completed")
+                .OrderByDescending(r => r.Score)
+                .ToListAsync();
+
+            int rank = 1;
+            foreach (var r in allResults)
+            {
+                r.Rank = rank++;
+            }
+            await _context.SaveChangesAsync();
+            
+            // Refresh our result object with the new rank
+            var currentResultWithRank = allResults.First(r => r.Id == result.Id);
+
+            return ApiResponse<TestResultDto>.SuccessResponse(new TestResultDto
+            {
+                Id = result.Id,
+                MockTestId = mockTestId,
+                Score = score,
+                Rank = currentResultWithRank.Rank,
+                HasPassed = hasPassed,
+                CompletedAt = result.CompletedAt,
+                Candidate = new CandidateProfileDto
+                {
+                    Id = candidate.Id,
+                    FirstName = candidate.FirstName,
+                    LastName = candidate.LastName,
+                    Email = candidate.User.Email,
+                    ProfilePicture = candidate.ProfilePicture
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            var innerMessage = ex.InnerException?.Message ?? ex.Message;
+            return ApiResponse<TestResultDto>.ErrorResponse($"Failed to save test result: {innerMessage}", "INTERNAL_ERROR");
+        }
     }
 }
